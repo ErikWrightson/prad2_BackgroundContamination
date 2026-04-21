@@ -211,7 +211,7 @@ void Yields::Evaluate(){
 
     for(Long64_t i = 0; i < entries; i++){
         //chain->LoadTree(); //Load the current tree
-        if((i)%10000 == 0 || (entries-i)<10000){cout<<"\rType" << typeArr[type] << " Events: " << i << "/" << entries << flush;}
+        if((i)%10000 == 0 || (entries-i)<10000){cout<<"\rType" << typeArr[type] << " Events: " << i+1 << "/" << entries << flush;}
 
         //Check if we are on a new file and if so get the liveCharge for this run.
         TString temp = (chain->GetCurrentFile())->GetName();
@@ -440,8 +440,20 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
 		    c->Clear();
 
             if(i == 3){
+                c->Divide(2,2);
                 c->cd(1);
                 h_eeCenters->Draw("COLZ");
+                c->cd(3);
+                TH1D* temp_x = h_eeCenters->ProjectionX();
+                //TF1* fit_x = new TF1("fit_x","gaus",-20,20);
+                temp_x->SetTitle("e-e Center X-Projection");
+                temp_x->Fit("gaus","","",-20,20);
+                temp_x->Draw("P");
+                c->cd(4);
+                TH1D* temp_y = h_eeCenters~->ProjectionY();
+                temp_y->SetTitle("e-e Center Y-Projection");
+                temp_y->Fit("gaus", "", "", -20, 20);
+                temp_y->Draw("P");
                 c->Print(pdfName);
                 c->Clear();
 
