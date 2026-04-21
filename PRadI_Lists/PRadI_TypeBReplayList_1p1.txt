@@ -1,0 +1,6 @@
+/volatile/hallb/prad/prad2_data/prad_empty_target/typeB/prad2Replay_1312.root
+/volatile/hallb/prad/prad2_data/prad_empty_target/typeB/prad2Replay_1317.root
+/volatile/hallb/prad/prad2_data/prad_empty_target/typeB/prad2Replay_1324.root
+/volatile/hallb/prad/prad2_data/prad_empty_target/typeB/prad2Replay_1326.root
+/volatile/hallb/prad/prad2_data/prad_empty_target/typeB/prad2Replay_1327.root
+/volatile/hallb/prad/prad2_data/prad_empty_target/typeB/prad2Replay_1339.root
