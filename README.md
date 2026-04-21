@@ -11,5 +11,7 @@ This software aims to quickly find the e-e and e-p Yields from PRad-II experimen
 |(d)|No Gas, No Cell. Downstream measurement.|X|X|X|
 
 ## Settup on ifarm
+```console
 |>> source farm_setup.csh|
 |>> make|
+```
