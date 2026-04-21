@@ -3,6 +3,13 @@ This software aims to quickly find the e-e and e-p Yields from PRad-II experimen
 
 ![Alt Text](./Images/PRad_SpecialBackgroundRuns.png)
 
-|Run Type|Description|
-|:------:|:---------:|
-|(a)|Production configuration. Gas in cell; Residual Gas in chamber; Target cell in place;|
+|Run Type|Description|Gas in Cell?|Residual gas in chamber?|Target cell in place?|
+|:------:|:---------:|:----------:|:-----------------------|:--------------------|
+|(a)|Production configuration.|✔|✔|✔|
+|(b)|Residual gas measurement.|X|✔|✔|
+|(c)|No gas at all. Cell Measurement.|X|X|✔|
+|(d)|No Gas, No Cell. Downstream measurement.|X|X|X|
+
+## Settup on ifarm
+|>> source farm_setup.csh|
+|>> make|
