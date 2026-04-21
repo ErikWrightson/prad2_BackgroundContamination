@@ -111,7 +111,7 @@ void Yields::settup_Histos(Int_t en){
 
     Int_t numFiles = chain->GetListOfFiles()->GetEntries();
 
-    h_eeCenters = new TH2F("h_eeCenters_type"+typeArr[type], "e-e Centers Type"+typeArr[type]+";x(mm);y(mm)", 120, -60, 60, 120, -60, 60);
+    h_eeCenters = new TH2F("h_eeCenters_type"+typeArr[type], "e-e Centers Type"+typeArr[type]+";x(mm);y(mm)", 240, -60, 60, 240, -60, 60);
 
     for(int i = 0; i < EE_CUT_NUM; i++){
         /*h_ee_HC_XY.emplace_back("h_ee_HC_XY_type"+typeArr[type]+ee_cutNames[i], "e-e HyCal XY Type"+typeArr[type]+" Cut: "+ee_cut[i]+";x(mm);y(mm)", 700, -700, 700, 700, -700, 700);
@@ -223,6 +223,8 @@ void Yields::Evaluate(){
             s.Remove(0,s.Last('/')+1);
             s.ReplaceAll("prad2Replay_", "");
             s.ReplaceAll(".root","");
+
+            runlist.push_back(s);
 
             runNum = s.Atoi();
             lc = lcMap.at(runNum);
@@ -406,6 +408,15 @@ void Yields::find_Events(){
  */
 void Yields::printPDF(TString pdfName,bool begin, bool end){
     TCanvas *c = new TCanvas("c"+typeArr[type], "Type" + typeArr[type] + "_Yield_Canvas",1000,1000);
+
+    for(Int_t l = 0; l < (Int_t) runlist.size(); l++){
+        for(int m = 0; m < EE_CUT_NUM; m++){
+            h_ee_YieldPerLC[m]->GetXaxis()->SetBinLabel(l+1,runlist.at(l));
+        }
+        for(int k = 0; k < EP_CUT_NUM; k++){
+            h_ep_YieldPerLC[k]->GetXaxis()->SetBinLabel(l+1,runlist.at(l));
+        }
+    }
 
     if(all){
         for(int i = 0; i < EE_CUT_NUM; i++){

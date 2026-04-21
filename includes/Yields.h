@@ -80,6 +80,7 @@ class Yields{
 
         map<Int_t, Double_t> lcMap;
         Double_t lc;
+        vector<TString> runlist;
 
         TString ee_cutNames[EE_CUT_NUM] = {"_noCut", "_expectedE","_coplanarity" ,"_elast"};
         TString ee_cut[EE_CUT_NUM] = {"None","Energy", "Coplanarity", "Elasticity"};
