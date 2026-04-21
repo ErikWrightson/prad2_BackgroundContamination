@@ -450,7 +450,7 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
                 temp_x->Fit("gaus","","",-20,20);
                 temp_x->Draw("P");
                 c->cd(4);
-                TH1D* temp_y = h_eeCenters~->ProjectionY();
+                TH1D* temp_y = h_eeCenters->ProjectionY();
                 temp_y->SetTitle("e-e Center Y-Projection");
                 temp_y->Fit("gaus", "", "", -20, 20);
                 temp_y->Draw("P");
