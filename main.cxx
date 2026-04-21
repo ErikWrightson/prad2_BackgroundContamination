@@ -171,7 +171,7 @@ int main (int argc, char **argv){
 
     // ── Parse command-line ───────────────────────────────────────────────
     int opt;
-    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:Am:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:")) != -1) {
         switch (opt) {
             case 'a': a = true; fileName_a = optarg; break;
             case 'b': b = true; fileName_b = optarg; break;
@@ -444,7 +444,7 @@ int main (int argc, char **argv){
         h_collimators_ep->SetLineColor(kBlue);
 
         c1->cd(1);
-        h_resGas_ep->SetAxisRange(0,0.2, "Y");
+        h_resGas_ep->SetAxisRange(0,0.4, "Y");
         h_resGas_ep->SetStats(0);
         h_resGas_ep->Draw("P E");
         h_cell_ep->Draw("P E SAME");

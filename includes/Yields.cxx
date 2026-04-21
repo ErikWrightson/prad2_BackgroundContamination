@@ -274,10 +274,10 @@ void Yields::fill_ep_Histos(Int_t c, Double_t* theta, Int_t index){
 vector<Double_t> Yields::findCenter(Float_t* pr_x, Float_t* pr_y, Int_t in0, Int_t in1){
     
     Float_t m_1 = (cl_y[in1]-cl_y[in0])/(cl_x[in1]-cl_x[in0]);
-    Float_t b_1 = -1.0*(cl_x[in0]*m_1 +cl_y[in0]);
+    Float_t b_1 = -1.0*(cl_x[in0]*m_1) +(cl_y[in0]);
 
     Float_t m_2 = (pr_y[1]-pr_y[0])/(pr_x[1]-pr_x[0]);
-    Float_t b_2 = -1.0*(pr_x[0]*m_2 + pr_y[0]);
+    Float_t b_2 = -1.0*(pr_x[0]*m_2) + (pr_y[0]);
 
     Double_t A[2][2] = {{-1.0*m_1, 1}, {-1.0*m_2, 1}};
     Double_t B[2] = {b_1, b_2};
@@ -339,7 +339,7 @@ void Yields::find_Events(){
                     for(Int_t k = 0; k < (Int_t) ee_passedEHits.size() && k != j; k++){
 
                         //Coplanarity Cut for double arm moller
-                        if((TMath::Abs(TMath::Abs(phi[ee_passedEHits.at(k)]-phi[j])-180) < 15)){ //Check that the double arm mollers are coplanar
+                        if((TMath::Abs(TMath::Abs(phi[ee_passedEHits.at(k)]-phi[j])-180) < 10)){ //Check that the double arm mollers are coplanar
                     
                             //If this was the first pair to pass the coplanarity cut, make sure to put both hits in the histogram.
                             if(ee_passedCopHits.size()==0){

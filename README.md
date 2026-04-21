@@ -12,6 +12,6 @@ This software aims to quickly find the e-e and e-p Yields from PRad-II experimen
 
 ## Settup on ifarm
 ```console
-|>> source farm_setup.csh|
-|>> make|
+source farm_setup.csh
+make
 ```
