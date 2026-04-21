@@ -13,10 +13,10 @@ ANA_C = includes/*.cxx
 ANA_O = $(ANA_C: .cxx=.o)
 ANA_H = $(ANA_C: .cxx=.h)
 
-default:	prad2_BackgroundSubtraction
+default:	prad2_BackgroundContamination
 clean:
 	@echo "Remove files: " ./*.o ./*~ ./main .includes/*.o
-	@rm -f ./*.o ./*~ ./prad2_BackgroundSubtraction ./includes/*.o
+	@rm -f ./*.o ./*~ ./prad2_BackgroundContamination ./includes/*.o
 	@echo "make clean command done..."
 
 ./%.o:	./%.cxx ./%.h
@@ -26,8 +26,8 @@ main.o: $(ANA_H) main.cxx
 	@echo "Compile: $(ROOTINC) $@"
 	@g++ $(FLAGS) -I $(ROOTINC) -I includes/ -c main.cxx -o main.o
 
-prad2_BackgroundSubtraction:		main.o $(ANA_O) $(ANAc_O) $(ANAC_O)
+prad2_BackgroundContamination:		main.o $(ANA_O) $(ANAc_O) $(ANAC_O)
 	@echo "Link Fit"
-	@echo g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundSubtraction $(ANA_O) $(ANAc_O) $(ANAC_O) main.o $(ROOTLIB) -lGenVector -lsqlite3
-	@g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundSubtraction $(ANA_O) $(ANAc_O) $(ANAC_O) main.o  $(ROOTLIB) -lGenVector -lsqlite3
+	@echo g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundContamination $(ANA_O) $(ANAc_O) $(ANAC_O) main.o $(ROOTLIB) -lGenVector -lsqlite3
+	@g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundContamination $(ANA_O) $(ANAc_O) $(ANAC_O) main.o  $(ROOTLIB) -lGenVector -lsqlite3
 	@echo "Compilation Done"
