@@ -1,8 +1,8 @@
 /**
- * Trigger Validation Processor
- * @author Erik Wrightson
- * @version 04.07.2026
- * @creation 04.05.2026
+ * Background Contamination Processor
+ * @author Erik Wrightson <wrightso@jlab.org>
+ * @version 04.21.2026
+ * @creation 04.15.2026
  */
 
 #include <iostream>

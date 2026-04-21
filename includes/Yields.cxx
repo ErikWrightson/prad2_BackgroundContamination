@@ -1,8 +1,8 @@
 /**
  * Yields class that defines the functionality for separating e-e and e-p and getting live charge normalized yields.
  *
- * @author Erik Wrightson
- * @version 04.16.2026
+ * @author Erik Wrightson <wrightso@jlab.org>
+ * @version 04.21.2026 
  * @creation 04.16.2026
  */
 #include "Yields.h"
