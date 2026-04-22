@@ -377,6 +377,7 @@ int main (int argc, char **argv){
     TH1F* h_H2Gas_ep = new TH1F("h_H2Gas_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
 
     if(a && b && c && d){
+        gErrorIgnoreLevel = 3000;
 
         //e-e Yield Background Contamintation
         h_H2Gas_ee->Add(h_a_ee_Yield, h_b_ee_Yield,1, -1);

@@ -17,6 +17,8 @@
  */
 Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a){
 
+    gErrorIgnoreLevel = 3000;
+
     curFileNum = -1;
     all = a;
     
@@ -208,10 +210,10 @@ void Yields::Evaluate(){
     prev_y[0] = -100000;
     prev_y[1] = -100000;
 
-
+    cout<<endl;
     for(Long64_t i = 0; i < entries; i++){
         //chain->LoadTree(); //Load the current tree
-        if((i)%10000 == 0 || (entries-i)<10000){cout<<"\rType" << typeArr[type] << " Events: " << i+1 << "/" << entries << flush;}
+        if((i+1)%10000 == 0 || (entries-i+1)<10000){cout<<"\rType" << typeArr[type] << " Events: " << i+1 << "/" << entries << flush;}
 
         //Check if we are on a new file and if so get the liveCharge for this run.
         TString temp = (chain->GetCurrentFile())->GetName();
@@ -234,6 +236,13 @@ void Yields::Evaluate(){
 
         find_Events();
 
+    }
+    
+    for(Int_t q = 0; q < EE_CUT_NUM; q++){
+        h_ee_Yield[q]->Scale(1.0/runlist.size());
+    }
+    for(Int_t w = 0; w < EP_CUT_NUM; w++){
+        h_ep_Yield[w]->Scale(1.0/runlist.size());
     }
 
 }
@@ -440,22 +449,23 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
 		    c->Clear();
 
             if(i == 3){
+                //gStyle->SetOptFit(1011);
                 c->Divide(2,2);
                 c->cd(1);
                 h_eeCenters->Draw("COLZ");
                 c->cd(3);
                 TH1D* temp_x = h_eeCenters->ProjectionX();
-                //TF1* fit_x = new TF1("fit_x","gaus",-20,20);
-                temp_x->SetTitle("e-e Center X-Projection");
-                temp_x->Fit("gaus","","",-20,20);
-                temp_x->Draw("P");
+                temp_x->SetTitle("e-e Type"+typeArr[type] +" Center X-Projection");
+                //temp_x->Fit("gaus","Q","",-60,60);
+                temp_x->Draw("HIST");
                 c->cd(4);
                 TH1D* temp_y = h_eeCenters->ProjectionY();
-                temp_y->SetTitle("e-e Center Y-Projection");
-                temp_y->Fit("gaus", "", "", -20, 20);
-                temp_y->Draw("P");
+                temp_y->SetTitle("e-e Type"+typeArr[type] +" Center Y-Projection");
+                //temp_y->Fit("gaus", "Q", "", -60, 60);
+                temp_y->Draw("HIST");
                 c->Print(pdfName);
                 c->Clear();
+                //gStyle->SetOptFit(0);
 
             }
         }
@@ -498,9 +508,19 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
         }
         c->Clear();
 
-
+        c->Divide(2,2);
         c->cd(1);
         h_eeCenters->Draw("COLZ");
+        c->cd(3);
+        TH1D* temp_x2 = h_eeCenters->ProjectionX();
+        temp_x2->SetTitle("e-e Type"+typeArr[type] +" Center X-Projection");
+        //temp_x2->Fit("gaus","Q","",-60,60);
+        temp_x2->Draw("HIST");
+        c->cd(4);
+        TH1D* temp_y2 = h_eeCenters->ProjectionY();
+        temp_y2->SetTitle("e-e Type"+typeArr[type] +" Center Y-Projection");
+        //temp_y2->Fit("gaus", "Q", "", -60, 60);
+        temp_y2->Draw("HIST");
         c->Print(pdfName);
         c->Clear();
 
