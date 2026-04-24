@@ -134,7 +134,7 @@ class Yields{
         Double_t ee_ExpectedE(Double_t theta);
         Double_t ep_ExpectedE(Double_t theta);
 
-        vector<Double_t> findCenter(Float_t* pr_x, Float_t* pr_y, Int_t in1, Int_t in2);
+        vector<Double_t> findCenter(Float_t* pr_x, Float_t* pr_y, Float_t x0, Float_t y0, Float_t x1, Float_t y1);
 
         Double_t EnergyRes(Double_t energy);
 
