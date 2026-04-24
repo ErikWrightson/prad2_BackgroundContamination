@@ -94,6 +94,7 @@ static void printUsage(const char *prog)
               << "\t-D <liveChargeDb> Different liveCharge database file location and name.\n"
               << "\t-v verbose: Option to plot and fill histograms before and after every cut.\n"
               << "\t-m <nThreads> Multithreading that will use the input amount of CPU cores \n"
+              << "\t-G Does the Moller Center finding with the GEM positions."
               << "\t-h Show this help\n"
               << "\tNOTE: Either option -f or -L are REQUIRED for running properly.";
 }
@@ -149,6 +150,7 @@ int main (int argc, char **argv){
     bool list = false;
     bool allPDF = false;
     bool f = false;
+    bool gems = false;
 
     string fileName_a;
     string fileName_b;
@@ -171,7 +173,7 @@ int main (int argc, char **argv){
 
     // ── Parse command-line ───────────────────────────────────────────────
     int opt;
-    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:G")) != -1) {
         switch (opt) {
             case 'a': a = true; fileName_a = optarg; break;
             case 'b': b = true; fileName_b = optarg; break;
@@ -182,6 +184,7 @@ int main (int argc, char **argv){
             case 'D': liveChargeDb = optarg; break;
             case 'v': allPDF = true; break;
             case 'm': cpus = optarg; break;
+            case 'G': gems = true; break;
             case 'h':
             default: printUsage(argv[0]); return (opt == 'h') ? 0 : 1;
         }
@@ -253,7 +256,7 @@ int main (int argc, char **argv){
     TH1F* h_a_ep_Yield;
     if(a){
         fChain_a = makeChain(fileNameVec_a);
-        a_obj = new Yields(fChain_a, 0, lcMap, allPDF);
+        a_obj = new Yields(fChain_a, 0, lcMap, allPDF, gems);
         a_obj->Evaluate();
         if(!b && !c && !d){
             a_obj->printPDF(outfile, true, true);
@@ -275,7 +278,7 @@ int main (int argc, char **argv){
     TH1F* h_b_ep_Yield;
     if(b){
         fChain_b = makeChain(fileNameVec_b);
-        b_obj = new Yields(fChain_b, 1, lcMap, allPDF);
+        b_obj = new Yields(fChain_b, 1, lcMap, allPDF, gems);
         b_obj->Evaluate();
         if(!a){
             if(!c && !d){
@@ -308,7 +311,7 @@ int main (int argc, char **argv){
     TH1F* h_c_ep_Yield;
     if(c){
         fChain_c = makeChain(fileNameVec_c);
-        c_obj = new Yields(fChain_c, 2, lcMap, allPDF);
+        c_obj = new Yields(fChain_c, 2, lcMap, allPDF, gems);
         c_obj->Evaluate();
         if(!a && !b){
             if(!d){
@@ -340,7 +343,7 @@ int main (int argc, char **argv){
     TH1F* h_d_ep_Yield;
     if(d){
         fChain_d = makeChain(fileNameVec_d);
-        d_obj = new Yields(fChain_d, 3, lcMap, allPDF);
+        d_obj = new Yields(fChain_d, 3, lcMap, allPDF, gems);
         d_obj->Evaluate();
         if(!a && !b && !c){
             d_obj->printPDF(outfile, true, true);

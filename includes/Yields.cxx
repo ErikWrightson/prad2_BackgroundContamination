@@ -13,14 +13,16 @@
  * @param c - the TChain to set up the branching and trees for.
  * @param t - the type of files this will be processing [a=0, b=1, c=2, d=3]
  * @param m - the LiveCharge map to use
- * @param a - Flag for weather or not all histograms should be filled or just the final ones.
+ * @param a - Flag for whether or not all histograms should be filled or just the final ones.
+ * @param g - Flag indicating whether or not to use the GEM positions for the Moller center calculation.
  */
-Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a){
+Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g){
 
     gErrorIgnoreLevel = 3000;
 
     curFileNum = -1;
     all = a;
+    gems = g;
     
     type = t;
     lcMap = m;
@@ -43,6 +45,13 @@ Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a){
     chain->SetBranchAddress("cl_nblocks", cl_nblocks); //Number of blocks in the cluster
     chain->SetBranchAddress("cl_center",  cl_center);  //center module id for this cluster
     chain->SetBranchAddress("cl_flag",    cl_flag);    //Cluster flags
+
+    if(g){
+        chain->SetBranchAddress("cl_ matchFlag", match_flag); //Matching Flag bit 0 for GEM0, bit 1 for GEM1 etc.
+        chain->SetBranchAddress("cl_matchGEMx", matchGEMx);   //The x-coordinate of the Matches found on each GEM plane.
+        chain->SetBranchAddress("cl_matchGEMy", matchGEMy);   //The y-coordinate of the Matches found on each GEM plane.
+        chain->SetBranchAddress("cl_matchGEMz", matchGEMz);   //The z-coordinate of the Matches found on each GEM plane.
+    }
 
     entries = chain->GetEntries();
 
@@ -205,10 +214,17 @@ void Yields::Evaluate(){
     TString curFileName = "";
     Int_t runNum = 0;
 
-    prev_x[0] = -100000;
-    prev_x[1]= -100000;
-    prev_y[0] = -100000;
-    prev_y[1] = -100000;
+    prev_x[0] =  -100000;
+    prev_x[1]=   -100000;
+    prev_y[0] =  -100000;
+    prev_y[1] =  -100000;
+    prev_z =     -100000;
+    
+    prev_x1[0] = -100000;
+    prev_x1[1] = -100000; 
+    prev_y1[0] = -100000;
+    prev_y1[1] = -100000;
+    prev_z1 =    -100000;
 
     cout<<endl;
     for(Long64_t i = 0; i < entries; i++){
@@ -282,10 +298,10 @@ void Yields::fill_ep_Histos(Int_t c, Double_t* theta, Int_t index){
  * @param pr_x - the two x positions of the previous double arm moller pair.
  * @param pr_y - the two y positions of the previous double arm moller pair.
  */
-vector<Double_t> Yields::findCenter(Float_t* pr_x, Float_t* pr_y, Int_t in0, Int_t in1){
+vector<Double_t> Yields::findCenter(Float_t* pr_x, Float_t* pr_y, Float_t x0, Float_t y0, Float_t x1, Float_t y1){
     
-    Float_t m_1 = (cl_y[in1]-cl_y[in0])/(cl_x[in1]-cl_x[in0]);
-    Float_t b_1 = -1.0*(cl_x[in0]*m_1) +(cl_y[in0]);
+    Float_t m_1 = (y1-y0)/(x1-x0);
+    Float_t b_1 = -1.0*(x0*m_1) +(y0);
 
     Float_t m_2 = (pr_y[1]-pr_y[0])/(pr_x[1]-pr_x[0]);
     Float_t b_2 = -1.0*(pr_x[0]*m_2) + (pr_y[0]);
@@ -373,21 +389,36 @@ void Yields::find_Events(){
                                 ee_passedElastHits.push_back(ee_passedEHits.at(k));
 
                                 if(prev_x[0] > -10000 && prev_x[1] > -10000 && prev_y[0] > -10000 && prev_y[1] > -10000){
-                                    vector<Double_t> center = findCenter(prev_x, prev_y, j, ee_passedEHits.at(k));
 
-                                    h_eeCenters->Fill(center.at(0), center.at(1));
+                                    if(gems){
+                                        if(match_flag[j] && match_flag[ee_passedEHits.at(k)]){
+                                            //TODO: find moller center using this hit and previous hit where both moller partners had matches.
+                                        }
+                                    }
+                                    else{
+                                        vector<Double_t> centerHC = findCenter(prev_x, prev_y, cl_x[j], cl_y[j], cl_x[ee_passedEHits.at(k)], cl_y[ee_passedEHits.at(k)]);
 
-                                    prev_x[0] = -100000;
-                                    prev_y[0] = -100000;
-                                    prev_x[1] = -100000;
-                                    prev_y[1] = -100000;
+                                        h_eeCenters->Fill(centerHC.at(0), centerHC.at(1));
+
+                                        prev_x[0] = -100000;
+                                        prev_y[0] = -100000;
+                                        prev_x[1] = -100000;
+                                        prev_y[1] = -100000;
+                                    }
                                 }
                                 else{
-                                    prev_x[0] = cl_x[ee_passedEHits.at(k)];
-                                    prev_x[1] = cl_x[j];
+                                    if(gems){
+                                        if(match_flag[j] && match_flag[ee_passedEHits.at(k)]){
+                                            //TODO: save current Moller Pair to look for center with next one.
+                                        }
+                                    }
+                                    else{
+                                        prev_x[0] = cl_x[ee_passedEHits.at(k)];
+                                        prev_x[1] = cl_x[j];
 
-                                    prev_y[0] = cl_y[ee_passedEHits.at(k)];
-                                    prev_y[1] = cl_y[j];
+                                        prev_y[0] = cl_y[ee_passedEHits.at(k)];
+                                        prev_y[1] = cl_y[j];
+                                    }
                                 }
                             }
                         }
@@ -406,6 +437,21 @@ void Yields::find_Events(){
             }
         }
     }
+}
+
+/**
+ * Project the non-Z component of a vector to a new Z plane.
+ *
+ * @param nonZ - the non-Z component to be projected
+ * @param ogZ - the original Z component
+ * @param newZ - the new Z plane value to project to
+ *
+ * @return - the projected value of the nonZ component where it is projected
+ *           in a straight line to the new Z plane provided
+ */
+Float_t Yields::projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ){
+	Float_t factor = newZ/ogZ;
+	return factor*nonZ;
 }
 
 /**

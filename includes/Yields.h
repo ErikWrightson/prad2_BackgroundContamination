@@ -60,7 +60,7 @@ class Yields{
         static constexpr Double_t M_e = 0.511; //Mass of Electron MeV/c^2
 
         //Constructor that ensures the chain tree is set up.
-        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a);
+        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g);
 
         void Evaluate();
 
@@ -77,6 +77,7 @@ class Yields{
         Int_t type;
         Long64_t entries;
         bool all;
+        bool gems;
 
         map<Int_t, Double_t> lcMap;
         Double_t lc;
@@ -92,6 +93,11 @@ class Yields{
 
         Float_t prev_x[2];
         Float_t prev_y[2];
+        Float_t prev_z;
+        
+        Float_t prev_x1[2];
+        Float_t prev_y1[2];
+        Float_t prev_z1;
 
         //Event information from root tree.
         Int_t evNum;
@@ -105,6 +111,12 @@ class Yields{
         UChar_t cl_nblocks[MAX_CLUSTERS];
         UShort_t cl_center[MAX_CLUSTERS];
         UInt_t cl_flag[MAX_CLUSTERS];
+        
+        //GEM Matching Information
+        UInt_t match_flag[MAX_CLUSTERS];
+        Float_t matchGEMx[MAX_CLUSTERS][2];
+        Float_t matchGEMy[MAX_CLUSTERS][2];
+        Float_t matchGEMz[MAX_CLUSTERS][2];
 
         //Declare arrays of histograms that will be made before and after each cut.
         TH2F* h_ee_HC_XY[EE_CUT_NUM];
@@ -132,6 +144,8 @@ class Yields{
         void fill_ep_Histos(Int_t c, Double_t* theta, Int_t index);
 
         void find_Events();
+
+        Float_t projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ);
 };
 
 #endif

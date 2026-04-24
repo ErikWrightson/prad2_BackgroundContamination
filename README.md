@@ -15,3 +15,11 @@ This software aims to quickly find the e-e and e-p Yields from PRad-II experimen
 source farm_setup.csh
 make
 ```
+
+## Run Options
+|Option|Input|Description|
+|:----:|:----:|:--------:|
+|-a|<TypeA_File/List>|Marks the accompanying file as a Type A file or a txt file containing a list of Type A files|
+|-b|<TypeB_File/List>|Marks the accompanying file as a Type B file or a txt file containing a list of Type A files|
+|-c|<TypeC_File/List>|Marks the accompanying file as a Type C file or a txt file containing a list of Type C files|
+|-d|<TypeD_File/List>|Marks the accompanying file as a Type D file or a txt file containing a list of Type D files|
