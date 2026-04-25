@@ -10,6 +10,19 @@ This software aims to quickly find the e-e and e-p Yields from PRad-II experimen
 |(c)|No gas at all. Cell Measurement.|X|X|✔|
 |(d)|No Gas, No Cell. Downstream measurement.|X|X|X|
 
+## Overview
+This program quickly finds rough e-e and e-p yields using various cuts for different types of runs and then compares them if at least 1 run of all 4 types is present. If not all types are present only the yields are calculated for the present types. All yields are normalized to by the liveCharge collected which is the livetime times the charge collected during the run which approximates for the amount of uptime of the beam. Finer studies would require cutting of downtime periods.
+
+Comparisons are then made to find the amount of contamination from each non-target element. Here is a list of the various subtractions that can be done:
+|Subtraction|What is left?|
+|:---------:|:-----------:|
+|(a)-(b)|H2 Gas Contribution (used as the general signal total)|
+|(b)-(c)|Residual Gas outside the cell within the target chamber|
+|(c)-(d)|Contribution of the cell itself.|
+|(d)|Contribution of anything outside the target chamber, notably the collimators.|
+
+Each of these is then divided by the liveCharge normalized yield of (a)-(b) to get the level of contamintation as compared to the good signal.
+
 ## Settup on ifarm
 ```console
 source farm_setup.csh
@@ -31,4 +44,12 @@ make
 |-G|N/A|Gems. Indicates that Møller center finding should be done with the GEM planes and includea GEM matching cut as part of the expected energy cut.|
 |-h|N/A|Help. Brings up options helper menu.|
 
-<span style="color:red">**NOTE:** At least one file type -a, -b, -c or -d must be used. </span>.
+**NOTE: At least one file type -a, -b, -c or -d must be used.**
+
+## Input File Formats
+### Individual File Inputs
+If the -L option is not used then for the type A-D inputs a .root file is expected in the format of the PRad-II reconstructed replay.
+### File List
+If the -L option is used then for the A-D type inputs a .txt file is expected in the format of all entire file path including filename of each file for this type is included separated by linebreaks.
+### LiveCharge Dat File
+The LiveCharge .dat file is expected to come in the format of the example (./database/beam_charge.dat), but more specifically the run number must be the first item in the line and the liveCharge must be the 4th.
