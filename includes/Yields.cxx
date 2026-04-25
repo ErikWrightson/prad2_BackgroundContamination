@@ -60,7 +60,7 @@ Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g){
 
     cout<<"\t\t\t\t\t\tSet all Branch Addresses. Entries in chain = " << entries;
 
-    settup_Histos(en);
+    setup_Histos(en);
         
 }
 
@@ -118,11 +118,16 @@ Double_t Yields::EnergyRes(Double_t energy){
  *
  * @param en - energy to use for setting the upper limit of the histograms.
  */
-void Yields::settup_Histos(Int_t en){
+void Yields::setup_Histos(Int_t en){
 
     Int_t numFiles = chain->GetListOfFiles()->GetEntries();
 
     h_eeCenters = new TH2F("h_eeCenters_type"+typeArr[type], "e-e Centers Type"+typeArr[type]+";x(mm);y(mm)", 240, -60, 60, 240, -60, 60);
+
+    if(gems){
+        h_eeCenters_GEM[0]= new TH2F("h_eeCenters_GEM0_type"+typeArr[type], "e-e Centers Type"+typeArr[type]+" GEM Index 0"+";x(mm);y(mm)", 240, -60, 60, 240, -60, 60);;
+        h_eeCenters_GEM[1]= new TH2F("h_eeCenters_GEM1_type"+typeArr[type], "e-e Centers Type"+typeArr[type]+" GEM Index 1"+";x(mm);y(mm)", 240, -60, 60, 240, -60, 60);;
+    }
 
     for(int i = 0; i < EE_CUT_NUM; i++){
         /*h_ee_HC_XY.emplace_back("h_ee_HC_XY_type"+typeArr[type]+ee_cutNames[i], "e-e HyCal XY Type"+typeArr[type]+" Cut: "+ee_cut[i]+";x(mm);y(mm)", 700, -700, 700, 700, -700, 700);
@@ -151,6 +156,11 @@ void Yields::settup_Histos(Int_t en){
 void Yields::delete_Histos(){
 
     delete h_eeCenters;
+
+    if(gems){
+        delete h_eeCenters_GEM[0];
+        delete h_eeCenters_GEM[1];
+    }
     for(int i = 0; i < EE_CUT_NUM; i++){
         delete h_ee_HC_XY[i];
         delete h_ee_EvTheta[i];
@@ -177,6 +187,11 @@ void Yields::save_Histos(TString rootFile, bool first){
     TObjArray* arr = new TObjArray(0,0);
 
     if(h_eeCenters->GetEntries()){(*arr).Add(h_eeCenters);}
+
+    if(gems){
+        if(h_eeCenters_GEM[0]->GetEntries()){(*arr).Add(h_eeCenters_GEM[0]);}
+        if(h_eeCenters_GEM[1]->GetEntries()){(*arr).Add(h_eeCenters_GEM[1]);}
+    }
 
     for(int i = 0; i < EE_CUT_NUM; i++){
         if(h_ee_HC_XY[i]->GetEntries()){(*arr).Add(h_ee_HC_XY[i]);}
@@ -215,16 +230,16 @@ void Yields::Evaluate(){
     Int_t runNum = 0;
 
     prev_x[0] =  -100000;
-    prev_x[1]=   -100000;
+    prev_x[1] =  -100000;
     prev_y[0] =  -100000;
     prev_y[1] =  -100000;
-    prev_z =     -100000;
+    prev_z    =  -100000;
     
     prev_x1[0] = -100000;
     prev_x1[1] = -100000; 
     prev_y1[0] = -100000;
     prev_y1[1] = -100000;
-    prev_z1 =    -100000;
+    prev_z1    = -100000;
 
     cout<<endl;
     for(Long64_t i = 0; i < entries; i++){
@@ -250,7 +265,12 @@ void Yields::Evaluate(){
 
         chain->GetEntry(i);
 
-        find_Events();
+        if(gems){
+            find_Events_wGEMs();
+        }
+        else{
+            find_Events_OnlyHyCal();
+        }
 
     }
     
@@ -323,9 +343,9 @@ vector<Double_t> Yields::findCenter(Float_t* pr_x, Float_t* pr_y, Float_t x0, Fl
 }
 
 /**
- * Helper method for looping through each event and finding if it qualifies as an e-e or e-p event.
+ * Helper method for looping through each event and finding if it qualifies as an e-e or e-p event only using information from HyCal.
  */
-void Yields::find_Events(){
+void Yields::find_Events_OnlyHyCal(){
     
     Double_t theta[nClust];
     Double_t phi[nClust];
@@ -389,36 +409,22 @@ void Yields::find_Events(){
                                 ee_passedElastHits.push_back(ee_passedEHits.at(k));
 
                                 if(prev_x[0] > -10000 && prev_x[1] > -10000 && prev_y[0] > -10000 && prev_y[1] > -10000){
+                                    vector<Double_t> centerHC = findCenter(prev_x, prev_y, cl_x[j], cl_y[j], cl_x[ee_passedEHits.at(k)], cl_y[ee_passedEHits.at(k)]);
 
-                                    if(gems){
-                                        if(match_flag[j] && match_flag[ee_passedEHits.at(k)]){
-                                            //TODO: find moller center using this hit and previous hit where both moller partners had matches.
-                                        }
-                                    }
-                                    else{
-                                        vector<Double_t> centerHC = findCenter(prev_x, prev_y, cl_x[j], cl_y[j], cl_x[ee_passedEHits.at(k)], cl_y[ee_passedEHits.at(k)]);
+                                    h_eeCenters->Fill(centerHC.at(0), centerHC.at(1));
 
-                                        h_eeCenters->Fill(centerHC.at(0), centerHC.at(1));
-
-                                        prev_x[0] = -100000;
-                                        prev_y[0] = -100000;
-                                        prev_x[1] = -100000;
-                                        prev_y[1] = -100000;
-                                    }
+                                    prev_x[0] = -100000;
+                                    prev_y[0] = -100000;
+                                    prev_x[1] = -100000;
+                                    prev_y[1] = -100000;
                                 }
                                 else{
-                                    if(gems){
-                                        if(match_flag[j] && match_flag[ee_passedEHits.at(k)]){
-                                            //TODO: save current Moller Pair to look for center with next one.
-                                        }
-                                    }
-                                    else{
-                                        prev_x[0] = cl_x[ee_passedEHits.at(k)];
-                                        prev_x[1] = cl_x[j];
+                                    
+                                    prev_x[0] = cl_x[ee_passedEHits.at(k)];
+                                    prev_x[1] = cl_x[j];
 
-                                        prev_y[0] = cl_y[ee_passedEHits.at(k)];
-                                        prev_y[1] = cl_y[j];
-                                    }
+                                    prev_y[0] = cl_y[ee_passedEHits.at(k)];
+                                    prev_y[1] = cl_y[j];
                                 }
                             }
                         }
@@ -427,6 +433,152 @@ void Yields::find_Events(){
 
                 //Find e-p events
                 if(TMath::Abs(cl_E[j]-ep_expE[j]) < 3.0*EnergyRes(ep_expE[j])){
+                    if(all){fill_ep_Histos(0, theta, j);}
+
+                    //Number of blocks cut
+                    if(cl_nblocks[j]>=5){
+                        fill_ep_Histos(1, theta, j);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Helper method for looping through each event and finding if it qualifies as an e-e or e-p event while using information from the GEMs.
+ */
+void Yields::find_Events_wGEMs(){
+    
+    Double_t theta[nClust];
+    Double_t phi[nClust];
+    //Double_t phi_GEM[nClust][2];
+    Double_t expE[nClust];
+    Double_t ep_expE[nClust];
+    vector<Int_t> ee_passedEHits;
+    vector<Int_t> ee_passedCopHits;
+    vector<Int_t> ee_passedElastHits;
+
+    for(Int_t j = 0; j < nClust; j++){
+
+        //Geometric cut on the Absorber
+        if(TMath::Abs(cl_x[j]) > 20.77 * 2.25 || TMath::Abs(cl_y[j]) > 20.75*2.25){
+            
+            theta[j] = TMath::ATan2(TMath::Sqrt(cl_x[j]*cl_x[j]+cl_y[j]*cl_y[j]),cl_z[j]);
+            
+            //Geometric cut on high angles. 
+            if(theta[j]*rad2Deg<6){
+            
+                phi[j] = TMath::ATan2(cl_y[j],cl_x[j]);
+                if(phi[j]<0){
+                    phi[j] += 2*TMath::Pi();
+                }
+                phi[j] = phi[j] * rad2Deg;
+
+                /*phi_GEM[j][0] = TMath::ATan2(matchGEMy[j][0],matchGEMx[j][0]);
+                if(phi_GEM[j][0]<0){
+                    phi_GEM[j][0] += 2*TMath::Pi();
+                }
+                phi_GEM[j][0] = phi_GEM[j][0] * rad2Deg;
+
+                phi_GEM[j][1] = TMath::ATan2(matchGEMy[j][1],matchGEMx[j][1]);
+                if(phi_GEM[j][1]<0){
+                    phi_GEM[j][1] += 2*TMath::Pi();
+                }
+                phi_GEM[j][1] = phi_GEM[j][1] * rad2Deg;*/
+                 
+                expE[j] = ee_ExpectedE(theta[j]);
+                ep_expE[j] = ep_ExpectedE(theta[j]);
+
+                //Find e-e events
+                //No cut
+                if(all){fill_ee_Histos(0, theta, j);}
+
+                //Expected ee Energy Cut and ensure that this hit has a match on both GEMs
+                if((TMath::Abs(cl_E[j] - expE[j]) <  3.0*EnergyRes(expE[j])) && match_flag[j]){
+                
+                    if(all){fill_ee_Histos(1, theta, j);}
+                    ee_passedEHits.push_back(j);
+
+                    for(Int_t k = 0; k < (Int_t) ee_passedEHits.size() && k != j; k++){
+
+                        //Coplanarity Cut for double arm moller
+                        if((TMath::Abs(TMath::Abs(phi[ee_passedEHits.at(k)]-phi[j])-180) < 10)){ //Check that the double arm mollers are coplanar
+                    
+                            //If this was the first pair to pass the coplanarity cut, make sure to put both hits in the histogram.
+                            if(ee_passedCopHits.size()==0){
+                                ee_passedCopHits.push_back(ee_passedEHits.at(k));
+                                if(all){fill_ee_Histos(2, theta, ee_passedEHits.at(k));}
+                            }
+                            ee_passedCopHits.push_back(j);
+                            if(all){fill_ee_Histos(2, theta, j);}
+
+                            //Cut for elasticity
+                            if(TMath::Abs(cl_E[ee_passedEHits.at(k)] + cl_E[j] - EBeam - M_e) < 3*EnergyRes(EBeam)){
+                        
+                                //If this was the first pair to pass the elasticity cut, make sure to put both hits in the histogram.
+                                if(ee_passedElastHits.size()==0){
+                                    ee_passedElastHits.push_back(ee_passedEHits.at(k));
+                                    fill_ee_Histos(3, theta, ee_passedEHits.at(k));
+                                }
+                        
+                                fill_ee_Histos(3, theta, j);
+                                ee_passedElastHits.push_back(ee_passedEHits.at(k));
+
+                                Int_t p_ind = ee_passedEHits.at(k);
+
+                                if(prev_x[0] > -10000 && prev_x[1] > -10000 && prev_y[0] > -10000 && prev_y[1] > -10000 && prev_z > -10000 && prev_x1[0] > -10000 && prev_x1[1] > -10000 && prev_y1[0] > -10000 && prev_y1[1] > -10000 && prev_z1 > -10000){
+                                    
+                                    //Get center from the first GEM plane coordinates.
+                                    //Project to a common z-plane to find the center so there is no skewing.
+                                    Float_t GEM0_hit0proj[2] = {projToZPlane(matchGEMx[j][0],matchGEMz[j][0], prev_z), projToZPlane(matchGEMy[j][0],matchGEMz[j][0], prev_z)};
+                                    Float_t GEM0_hit1proj[2] = {projToZPlane(matchGEMx[p_ind][0],matchGEMz[p_ind][0], prev_z), projToZPlane(matchGEMy[p_ind][0],matchGEMz[p_ind][0], prev_z)};
+                                    
+                                    vector<Double_t> centerG0 = findCenter(prev_x, prev_y, GEM0_hit0proj[0], GEM0_hit0proj[1], GEM0_hit1proj[0], GEM0_hit1proj[1]);
+                                    h_eeCenters_GEM[0]->Fill(centerG0.at(0), centerG0.at(1));
+
+                                    prev_x[0] = -100000;
+                                    prev_y[0] = -100000;
+                                    prev_x[1] = -100000;
+                                    prev_y[1] = -100000;
+                                    prev_z    = -100000;
+
+                                    //Get center from the second GEM plane coordinates.
+                                    //Project to a common z-plane to find the center so there is no skewing.
+                                    Float_t GEM1_hit0proj[2] = {projToZPlane(matchGEMx[j][1],matchGEMz[j][1], prev_z1), projToZPlane(matchGEMy[j][1],matchGEMz[j][1], prev_z1)};
+                                    Float_t GEM1_hit1proj[2] = {projToZPlane(matchGEMx[p_ind][1],matchGEMz[p_ind][1], prev_z1), projToZPlane(matchGEMy[p_ind][1],matchGEMz[p_ind][1], prev_z1)};
+                                    
+                                    vector<Double_t> centerG1 = findCenter(prev_x1, prev_y1, GEM1_hit0proj[0], GEM1_hit0proj[1], GEM1_hit1proj[0], GEM1_hit1proj[1]);
+                                    h_eeCenters_GEM[0]->Fill(centerG1.at(0), centerG1.at(1));
+
+                                    prev_x1[0] = -100000;
+                                    prev_y1[0] = -100000;
+                                    prev_x1[1] = -100000;
+                                    prev_y1[1] = -100000;
+                                    prev_z1    = -100000;
+                                }
+                                else{
+                                    
+                                    prev_z    = matchGEMz[j][0];
+                                    prev_x[0] = projToZPlane(matchGEMx[p_ind][0], matchGEMz[p_ind][0], prev_z);
+                                    prev_x[1] = matchGEMx[j][0];
+                                    prev_y[0] = projToZPlane(matchGEMy[p_ind][0], matchGEMz[p_ind][0], prev_z);
+                                    prev_y[1] = matchGEMy[j][0];
+
+                                    prev_z1    = matchGEMz[j][1];
+                                    prev_x1[0] = projToZPlane(matchGEMx[p_ind][1], matchGEMz[p_ind][1], prev_z1);
+                                    prev_x1[1] = matchGEMx[j][1];
+                                    prev_y1[0] = projToZPlane(matchGEMx[p_ind][1], matchGEMz[p_ind][1], prev_z1);
+                                    prev_y1[1] = matchGEMy[j][1];
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //Find e-p events
+                if(TMath::Abs(cl_E[j]-ep_expE[j]) < 3.0*EnergyRes(ep_expE[j]) && match_flag[j]){
                     if(all){fill_ep_Histos(0, theta, j);}
 
                     //Number of blocks cut
@@ -494,25 +646,64 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
             }
 		    c->Clear();
 
-            if(i == 3){
-                //gStyle->SetOptFit(1011);
+            if(i == 3 && !gems){
+                gStyle->SetOptFit(1011);
                 c->Divide(2,2);
                 c->cd(1);
                 h_eeCenters->Draw("COLZ");
                 c->cd(3);
                 TH1D* temp_x = h_eeCenters->ProjectionX();
                 temp_x->SetTitle("e-e Type"+typeArr[type] +" Center X-Projection");
-                //temp_x->Fit("gaus","Q","",-60,60);
-                temp_x->Draw("HIST");
+                temp_x->Fit("gaus","Q","",-20,20);
+                temp_x->Draw("P L");
                 c->cd(4);
                 TH1D* temp_y = h_eeCenters->ProjectionY();
                 temp_y->SetTitle("e-e Type"+typeArr[type] +" Center Y-Projection");
-                //temp_y->Fit("gaus", "Q", "", -60, 60);
-                temp_y->Draw("HIST");
+                temp_y->Fit("gaus", "Q", "", -20, 20);
+                temp_y->Draw("P L");
                 c->Print(pdfName);
                 c->Clear();
-                //gStyle->SetOptFit(0);
+                gStyle->SetOptFit(0);
 
+            }
+            else if(i == 3){
+                gStyle->SetOptFit(1011);
+                c->Divide(2,2);
+                c->cd(1);
+                h_eeCenters_GEM[0]->Draw("COLZ");
+                c->cd(3);
+                TH1D* temp_x = h_eeCenters_GEM[0]->ProjectionX();
+                temp_x->SetTitle("e-e Type"+typeArr[type] +" GEM Index 0 Center X-Projection");
+                temp_x->SetMarkerStyle(20);
+                temp_x->Fit("gaus","Q","",-20,20);
+                temp_x->Draw("P L");
+                c->cd(4);
+                TH1D* temp_y = h_eeCenters_GEM[0]->ProjectionY();
+                temp_y->SetTitle("e-e Type"+typeArr[type] +" GEM Index 0 Center Y-Projection");
+                temp_y->SetMarkerStyle(20);
+                temp_y->Fit("gaus", "Q", "", -20, 20);
+                temp_y->Draw("P L");
+                c->Print(pdfName);
+                c->Clear();
+
+                c->Divide(2,2);
+                c->cd(1);
+                h_eeCenters_GEM[1]->Draw("COLZ");
+                c->cd(3);
+                TH1D* temp_x1 = h_eeCenters_GEM[1]->ProjectionX();
+                temp_x1->SetTitle("e-e Type"+typeArr[type] +" GEM Index 1 Center X-Projection");
+                temp_x1->SetMarkerStyle(20);
+                temp_x1->Fit("gaus","Q","",-20,20);
+                temp_x1->Draw("P L");
+                c->cd(4);
+                TH1D* temp_y1 = h_eeCenters_GEM[1]->ProjectionY();
+                temp_y1->SetTitle("e-e Type"+typeArr[type] +" GEM Index 1 Center Y-Projection");
+                temp_y1->SetMarkerStyle(20);
+                temp_y1->Fit("gaus", "Q", "", -20, 20);
+                temp_y1->Draw("P L");
+                c->Print(pdfName);
+                c->Clear();
+                gStyle->SetOptFit(0);
             }
         }
         for(int j = 0; j < EP_CUT_NUM; j++){

@@ -130,6 +130,7 @@ class Yields{
         TH1F* h_ep_YieldPerLC[EE_CUT_NUM];
 
         TH2F* h_eeCenters;
+        TH2F* h_eeCenters_GEM[2];
 
         Double_t ee_ExpectedE(Double_t theta);
         Double_t ep_ExpectedE(Double_t theta);
@@ -138,12 +139,13 @@ class Yields{
 
         Double_t EnergyRes(Double_t energy);
 
-        void settup_Histos(Int_t en);
+        void setup_Histos(Int_t en);
 
         void fill_ee_Histos(Int_t c, Double_t* theta, Int_t index);
         void fill_ep_Histos(Int_t c, Double_t* theta, Int_t index);
 
-        void find_Events();
+        void find_Events_OnlyHyCal();
+        void find_Events_wGEMs();
 
         Float_t projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ);
 };
