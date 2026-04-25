@@ -23,3 +23,12 @@ make
 |-b|<TypeB_File/List>|Marks the accompanying file as a Type B file or a txt file containing a list of Type A files|
 |-c|<TypeC_File/List>|Marks the accompanying file as a Type C file or a txt file containing a list of Type C files|
 |-d|<TypeD_File/List>|Marks the accompanying file as a Type D file or a txt file containing a list of Type D files|
+|-f|<FileName (NO EXTENSION)>|Give the custom filename that you would like to be used for the aggregated output ROOT file and PDF|
+|-D|<liveChargeDb>|Custom location for the liveCharge .dat file (in the format described below)|
+|-L|N/A|Indicates that list .txt files for handing in many run number locations at once will be used (in format described below)|
+|-v|N/A|Verbosity. Fill, print and save all histograms before and after each cut is applied.|
+|-m|<nThreads>|Multithreading. Number of threads to request.|
+|-G|N/A|Gems. Indicates that Møller center finding should be done with the GEM planes and includea GEM matching cut as part of the expected energy cut.|
+|-h|N/A|Help. Brings up options helper menu.|
+
+<span style="color:red">**NOTE:** At least one file type -a, -b, -c or -d must be used. </span>.
