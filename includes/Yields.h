@@ -60,7 +60,7 @@ class Yields{
         static constexpr Double_t M_e = 0.511; //Mass of Electron MeV/c^2
 
         //Constructor that ensures the chain tree is set up.
-        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g);
+        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB);
 
         void Evaluate();
 
@@ -78,6 +78,7 @@ class Yields{
         Long64_t entries;
         bool all;
         bool gems;
+        bool hist;
 
         map<Int_t, Double_t> lcMap;
         Double_t lc;

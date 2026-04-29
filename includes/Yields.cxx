@@ -15,17 +15,21 @@
  * @param m - the LiveCharge map to use
  * @param a - Flag for whether or not all histograms should be filled or just the final ones.
  * @param g - Flag indicating whether or not to use the GEM positions for the Moller center calculation.
+ * @param h - Flag indicating if history should be searched or not.
  */
-Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g){
+Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB){
 
     gErrorIgnoreLevel = 3000;
 
     curFileNum = -1;
     all = a;
     gems = g;
+    hist = h;
     
     type = t;
     lcMap = m;
+
+    Float_t EBeam = EB;
     
     chain = (TChain*) c;
 
@@ -34,7 +38,7 @@ Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g){
     //General Event Data
     chain->SetBranchAddress("event_num",       &evNum);
     chain->SetBranchAddress("total_energy",    &totalE);
-    chain->SetBranchAddress("EBeam",           &EBeam);
+    //chain->SetBranchAddress("EBeam",           &EBeam);
 
     //HyCal Information
     chain->SetBranchAddress("n_clusters", &nClust);
@@ -55,7 +59,6 @@ Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g){
 
     entries = chain->GetEntries();
 
-    chain->GetEntry(0);
     Int_t en = (Int_t) EBeam;
 
     cout<<"\t\t\t\t\t\tSet all Branch Addresses. Entries in chain = " << entries;
