@@ -556,9 +556,11 @@ void Yields::find_Events_wGEMs(){
                             //If this was the first pair to pass the coplanarity cut, make sure to put both hits in the histogram.
                             if(ee_passedCopHits.size()==0){
                                 ee_passedCopHits.push_back(ee_passedEHits.at(k));
+                                vert[ee_passedEHits.at(k)] = find_DoubleArm_ee_VertZ(ee_passedEHits.at(k), j);
                                 if(all){fill_ee_Histos(2, theta, ee_passedEHits.at(k), vert[ee_passedEHits.at(k)]);}
                             }
                             ee_passedCopHits.push_back(j);
+                            vert[j] = find_DoubleArm_ee_VertZ(j, ee_passedEHits.at(k));
                             if(all){fill_ee_Histos(2, theta, j, vert[j]);}
 
                             //Cut for elasticity
@@ -709,12 +711,12 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
                 c->cd(3);
                 TH1D* temp_x = h_eeCenters->ProjectionX();
                 temp_x->SetTitle("e-e Type"+typeArr[type] +" Center X-Projection");
-                temp_x->Fit("gaus","Q","",-20,20);
+                temp_x->Fit("gaus","Q","",-10,10);
                 temp_x->Draw("P L");
                 c->cd(4);
                 TH1D* temp_y = h_eeCenters->ProjectionY();
                 temp_y->SetTitle("e-e Type"+typeArr[type] +" Center Y-Projection");
-                temp_y->Fit("gaus", "Q", "", -20, 20);
+                temp_y->Fit("gaus", "Q", "", -10, 10);
                 temp_y->Draw("P L");
                 c->Print(pdfName);
                 c->Clear();
@@ -730,13 +732,13 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
                 TH1D* temp_x = h_eeCenters_GEM[0]->ProjectionX();
                 temp_x->SetTitle("e-e Type"+typeArr[type] +" GEM Index 0 Center X-Projection");
                 temp_x->SetMarkerStyle(20);
-                temp_x->Fit("gaus","Q","",-20,20);
+                temp_x->Fit("gaus","Q","",-10,10);
                 temp_x->Draw("P L");
                 c->cd(4);
                 TH1D* temp_y = h_eeCenters_GEM[0]->ProjectionY();
                 temp_y->SetTitle("e-e Type"+typeArr[type] +" GEM Index 0 Center Y-Projection");
                 temp_y->SetMarkerStyle(20);
-                temp_y->Fit("gaus", "Q", "", -20, 20);
+                temp_y->Fit("gaus", "Q", "", -10, 10);
                 temp_y->Draw("P L");
                 c->Print(pdfName);
                 c->Clear();
@@ -748,13 +750,13 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
                 TH1D* temp_x1 = h_eeCenters_GEM[1]->ProjectionX();
                 temp_x1->SetTitle("e-e Type"+typeArr[type] +" GEM Index 1 Center X-Projection");
                 temp_x1->SetMarkerStyle(20);
-                temp_x1->Fit("gaus","Q","",-20,20);
+                temp_x1->Fit("gaus","Q","",-10,10);
                 temp_x1->Draw("P L");
                 c->cd(4);
                 TH1D* temp_y1 = h_eeCenters_GEM[1]->ProjectionY();
                 temp_y1->SetTitle("e-e Type"+typeArr[type] +" GEM Index 1 Center Y-Projection");
                 temp_y1->SetMarkerStyle(20);
-                temp_y1->Fit("gaus", "Q", "", -20, 20);
+                temp_y1->Fit("gaus", "Q", "", -10, 10);
                 temp_y1->Draw("P L");
                 c->Print(pdfName);
                 c->Clear();
@@ -886,6 +888,8 @@ TH1F* Yields::get_ep_YieldHisto(){
  * Helper method that finds the vertex Z for the current Mott event or any event assuming it comes from beamline.
  *
  * @param j - index of the hit being investigated.
+ *
+ * @return - the reconstructed vertex z of all particles assuming origin of path along the beamline.
  */
 Float_t Yields::find_VertZ_beamline(Int_t j){
     //Float_t beamline[3] = {0, 0, 1};
@@ -903,16 +907,19 @@ Float_t Yields::find_VertZ_beamline(Int_t j){
  * Helper Method that finds the vertez Z for the current Double arm e-e event.
  *
  * @param j - the index of the hit being investigated
+ * @param k - the index of the identified Moller partner
+ *
+ * @return - the reconstructed z vertex position of the double arm Moller pairs.
  */
-/*Float_t Yields::find_ee_VertZ(Int_t j, Int_t k){
+Float_t Yields::find_DoubleArm_ee_VertZ(Int_t j, Int_t k){
 
-    Float_t eventVec[3] = {matchGEMx[j][0]-matchGEMx[j][1], matchGEMy[j][0]-matchGEMy[j][1], matchGEMz[j][0]-matchGEMz[j][1]};
-    Float_t mag = TMath::Sqrt(eventVec[0]*eventVec[0] + eventVec[1]*eventVec[1] + eventVec[2]*eventVec[2]);
-    Float_t u[3] = {eventVec[0]/mag, eventVec[1]/mag, eventVec[2]/mag};
-    Float_t A[3] = {matchGEMx[j][1], matchGEMy[j][1], matchGEMz[j][1]};
+    Float_t x1 = matchGEMx[j][1];
+    Float_t y1 = matchGEMy[j][1];
+    Float_t r_1 = TMath::Sqrt(x1*x1 + y1*y1);
 
-    Float_t partnerVec[3] = {matchGEMx[k][0]-matchGEMx[k][1], matchGEMy[k][0]-matchGEMy[k][1], matchGEMz[k][0]-matchGEMz[k][1]};
-    Float_t partnerMag = TMath::Sqrt(partnerVec[0]*partnerVec[0] + partnerVec[1]*partnerVec[1] + partnerVec[2]*partnerVec[2]);
-    Float_t v[3] = {partnerMag[0]/partnerMag, partnerVec[1]/partnerMag, partnerVec[2]/partnerMag};
-    Float_t B[3] = {matchGEMx[k][1], matchGEMy[k][1], matchGEMz[k][1]};
-}*/
+    Float_t x2 = matchGEMx[k][1];
+    Float_t y2 = matchGEMy[k][1];
+    Float_t r_2 = TMath::Sqrt(x2*x2 + y2*y2);
+
+    return TMath::Sqrt(((M_e+cl_E[j])*r_1*r_2)/(2*M_e));
+}

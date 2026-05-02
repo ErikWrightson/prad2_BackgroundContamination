@@ -159,6 +159,7 @@ int main (int argc, char **argv){
     bool hist = false;
     bool histOptUsed = false;
     bool z = false;
+    bool zCut = false;
 
     string fileName_a;
     string fileName_b;
@@ -167,6 +168,7 @@ int main (int argc, char **argv){
 
     string cpus = "1";
     string E = "3488.43";
+    TString zC = "";
 
     TString outfile = "./outfiles/defaultOutput.pdf";
     TString root_outfile = "./rootFiles/defaultRootOutput.root";
@@ -197,10 +199,15 @@ int main (int argc, char **argv){
             case 'G': gems = true; break;
             case 'H': hist = true; if(optarg){historyLocation = optarg; histOptUsed = true;}; break;
             case 'E': E = optarg; break;
-            case 'z': z = true; if(optarg){}break;
+            case 'z': z = true; if(optarg){zC = optarg;}break;
             case 'h':
             default: printUsage(argv[0]); return (opt == 'h') ? 0 : 1;
         }
+    }
+
+    if(zC == "y"){
+        zCut = true;
+        cout<< "Currently there is no implemented cut on reconstructed z vertex. Sorry. Continuing without it anyway." << endl;
     }
 
     if (hist && !fs::is_directory(historyLocation.Data())){

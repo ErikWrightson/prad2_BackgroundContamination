@@ -153,7 +153,7 @@ class Yields{
         void find_Events_wGEMs();
 
         Float_t find_VertZ_beamline(Int_t j);
-        //Float_t find_ee_VertZ();
+        Float_t find_DoubleArm_ee_VertZ(Int_t j, Int_t k);
 
         Float_t projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ);
 };
