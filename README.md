@@ -42,6 +42,8 @@ make
 |-v|N/A|Verbosity. Fill, print and save all histograms before and after each cut is applied.|
 |-m|<nThreads>|Multithreading. Number of threads to request.|
 |-G|N/A|Gems. Indicates that Møller center finding should be done with the GEM planes and includea GEM matching cut as part of the expected energy cut.|
+|-E|<Energy [MeV]>| Indicates the energy of the incoming files.|
+|-z|N/A|Plots the z-vertex assuming the event came from the beamline. GEM option must be used. (Double arm Moller vertex matching will be added later).|
 |-h|N/A|Help. Brings up options helper menu.|
 
 **NOTE: At least one file type -a, -b, -c or -d must be used.**

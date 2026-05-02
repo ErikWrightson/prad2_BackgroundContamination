@@ -99,6 +99,7 @@ static void printUsage(const char *prog)
               << "\t-G Does the Moller Center finding with the GEM positions.\n"
               << "\t-H Uses the run yield history\n"
               << "\t-E <Beam Energy> takes the beam energy for all files in this run in MeV\n"
+              << "\t-z includes vertex reconstruction using the GEMs\n"
               << "\t-h Show this help\n"
               << "\tNOTE: Either option -f or -L are REQUIRED for running properly.";
 }
@@ -157,6 +158,7 @@ int main (int argc, char **argv){
     bool gems = false;
     bool hist = false;
     bool histOptUsed = false;
+    bool z = false;
 
     string fileName_a;
     string fileName_b;
@@ -164,7 +166,7 @@ int main (int argc, char **argv){
     string fileName_d;
 
     string cpus = "1";
-    string E = "2185";
+    string E = "3488.43";
 
     TString outfile = "./outfiles/defaultOutput.pdf";
     TString root_outfile = "./rootFiles/defaultRootOutput.root";
@@ -181,7 +183,7 @@ int main (int argc, char **argv){
 
     // ── Parse command-line ───────────────────────────────────────────────
     int opt;
-    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:GH::E:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:GH::E:z::")) != -1) {
         switch (opt) {
             case 'a': a = true; fileName_a = optarg; break;
             case 'b': b = true; fileName_b = optarg; break;
@@ -195,6 +197,7 @@ int main (int argc, char **argv){
             case 'G': gems = true; break;
             case 'H': hist = true; if(optarg){historyLocation = optarg; histOptUsed = true;}; break;
             case 'E': E = optarg; break;
+            case 'z': z = true; if(optarg){}break;
             case 'h':
             default: printUsage(argv[0]); return (opt == 'h') ? 0 : 1;
         }
@@ -211,6 +214,11 @@ int main (int argc, char **argv){
         else{
             historyLocation = historyLocation + "/NoGEMs/";
         }
+    }
+
+    if(z && !gems){
+        cout<<"Using vertex Z reconstruction also requires that the GEM flag be used.";
+        return -5;
     }
 
     if(f){
@@ -281,7 +289,7 @@ int main (int argc, char **argv){
     TH1F* h_a_ep_Yield;
     if(a){
         fChain_a = makeChain(fileNameVec_a);
-        a_obj = new Yields(fChain_a, 0, lcMap, allPDF, gems, hist,beam);
+        a_obj = new Yields(fChain_a, 0, lcMap, allPDF, gems, hist,beam,z);
         a_obj->Evaluate();
         if(!b && !c && !d){
             a_obj->printPDF(outfile, true, true);
@@ -303,7 +311,7 @@ int main (int argc, char **argv){
     TH1F* h_b_ep_Yield;
     if(b){
         fChain_b = makeChain(fileNameVec_b);
-        b_obj = new Yields(fChain_b, 1, lcMap, allPDF, gems, hist, beam);
+        b_obj = new Yields(fChain_b, 1, lcMap, allPDF, gems, hist, beam,z);
         b_obj->Evaluate();
         if(!a){
             if(!c && !d){
@@ -336,7 +344,7 @@ int main (int argc, char **argv){
     TH1F* h_c_ep_Yield;
     if(c){
         fChain_c = makeChain(fileNameVec_c);
-        c_obj = new Yields(fChain_c, 2, lcMap, allPDF, gems, hist, beam);
+        c_obj = new Yields(fChain_c, 2, lcMap, allPDF, gems, hist, beam,z);
         c_obj->Evaluate();
         if(!a && !b){
             if(!d){
@@ -368,7 +376,7 @@ int main (int argc, char **argv){
     TH1F* h_d_ep_Yield;
     if(d){
         fChain_d = makeChain(fileNameVec_d);
-        d_obj = new Yields(fChain_d, 3, lcMap, allPDF, gems, hist, beam);
+        d_obj = new Yields(fChain_d, 3, lcMap, allPDF, gems, hist, beam,z);
         d_obj->Evaluate();
         if(!a && !b && !c){
             d_obj->printPDF(outfile, true, true);

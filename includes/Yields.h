@@ -60,7 +60,7 @@ class Yields{
         static constexpr Double_t M_e = 0.511; //Mass of Electron MeV/c^2
 
         //Constructor that ensures the chain tree is set up.
-        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB);
+        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB, bool v);
 
         void Evaluate();
 
@@ -79,6 +79,7 @@ class Yields{
         bool all;
         bool gems;
         bool hist;
+        bool z;
 
         map<Int_t, Double_t> lcMap;
         Double_t lc;
@@ -130,6 +131,9 @@ class Yields{
         TH1F* h_ep_Yield[EP_CUT_NUM];
         TH1F* h_ep_YieldPerLC[EE_CUT_NUM];
 
+        TH1F* h_ee_zVert[EE_CUT_NUM];
+        TH1F* h_ep_zVert[EE_CUT_NUM];
+
         TH2F* h_eeCenters;
         TH2F* h_eeCenters_GEM[2];
 
@@ -142,11 +146,14 @@ class Yields{
 
         void setup_Histos(Int_t en);
 
-        void fill_ee_Histos(Int_t c, Double_t* theta, Int_t index);
-        void fill_ep_Histos(Int_t c, Double_t* theta, Int_t index);
+        void fill_ee_Histos(Int_t c, Double_t* theta, Int_t index, Float_t v);
+        void fill_ep_Histos(Int_t c, Double_t* theta, Int_t index, Float_t v);
 
         void find_Events_OnlyHyCal();
         void find_Events_wGEMs();
+
+        Float_t find_VertZ_beamline(Int_t j);
+        //Float_t find_ee_VertZ();
 
         Float_t projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ);
 };
