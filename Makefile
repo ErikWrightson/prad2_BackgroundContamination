@@ -28,6 +28,6 @@ main.o: $(ANA_H) main.cxx
 
 prad2_BackgroundContamination:		main.o $(ANA_O) $(ANAc_O) $(ANAC_O)
 	@echo "Link Fit"
-	@echo g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundContamination $(ANA_O) $(ANAc_O) $(ANAC_O) main.o $(ROOTLIB) -lGenVector -lsqlite3
-	@g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundContamination $(ANA_O) $(ANAc_O) $(ANAC_O) main.o  $(ROOTLIB) -lGenVector -lsqlite3
+	@echo g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundContamination $(ANA_O) $(ANAc_O) $(ANAC_O) main.o $(ROOTLIB) -lGenVector
+	@g++ $(FLAGS) -I $(ROOTINC) -I includes/ -o prad2_BackgroundContamination $(ANA_O) $(ANAc_O) $(ANAC_O) main.o  $(ROOTLIB) -lGenVector
 	@echo "Compilation Done"

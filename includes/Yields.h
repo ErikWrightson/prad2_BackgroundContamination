@@ -40,7 +40,6 @@
 #include <string.h>
 #include <map>
 
-#include <sqlite3.h>
 #include <iomanip>
 
 using namespace std;
