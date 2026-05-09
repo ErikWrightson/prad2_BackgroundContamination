@@ -1,0 +1,2 @@
+/volatile/hallb/prad/wrightso/BackgroundStudies/TypeB/prad_24426.filtered.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/TypeB/prad_24430.filtered.root

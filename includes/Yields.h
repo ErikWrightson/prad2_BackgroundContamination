@@ -131,10 +131,13 @@ class Yields{
         TH1F* h_ep_YieldPerLC[EE_CUT_NUM];
 
         TH1F* h_ee_zVert[EE_CUT_NUM];
+        TH1F* h_ee_zVert_DoubleArmMoller[2];
         TH1F* h_ep_zVert[EE_CUT_NUM];
 
         TH2F* h_eeCenters;
         TH2F* h_eeCenters_GEM[2];
+
+        TH1F* h_epToee_ratio;
 
         Double_t ee_ExpectedE(Double_t theta);
         Double_t ep_ExpectedE(Double_t theta);
