@@ -16,8 +16,11 @@
  * @param a - Flag for whether or not all histograms should be filled or just the final ones.
  * @param g - Flag indicating whether or not to use the GEM positions for the Moller center calculation.
  * @param h - Flag indicating if history should be searched or not.
+ * @param EB - Beam energy for events in this object.
+ * @param vert - Flag indicating if z-vertex is to be calculated and plotted for this object.
+ * @param uV - Flag indicating if the veto scintillator is to be used.
  */
-Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB, bool vert){
+Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB, bool vert, bool uV){
 
     gErrorIgnoreLevel = 3000;
 
@@ -26,6 +29,7 @@ Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g, bool
     gems = g;
     hist = h;
     z = vert;
+    useVeto = uV;
     
     type = t;
     lcMap = m;
@@ -55,7 +59,23 @@ Yields::Yields(TChain* c, Int_t t, map<Int_t, Double_t>& m, bool a, bool g, bool
         chain->SetBranchAddress("matchFlag", match_flag); //Matching Flag bit 0 for GEM0, bit 1 for GEM1 etc.
         chain->SetBranchAddress("mHit_gx", matchGEMx);   //The x-coordinate of the Matches found on each GEM plane.
         chain->SetBranchAddress("mHit_gy", matchGEMy);   //The y-coordinate of the Matches found on each GEM plane.
-        chain->SetBranchAddress("mHit_gz", matchGEMz);   //The z-coordinate of the Matches found on each GEM plane.
+        chain->SetBranchAddress("mHit_gz", matchGEMz);   //The z-coordinate of the Matches found on each GEM plane.4
+
+        chain->SetBranchAddress("matchGEMx",  mgx);
+        chain->SetBranchAddress("matchGEMy",  mgy);
+        chain->SetBranchAddress("matchGEMz",  mgz);
+    }
+
+    if(useVeto){
+        chain->SetBranchAddress("veto_nch", &nVeto);
+        chain->SetBranchAddress("veto_id", vetoId);
+        chain->SetBranchAddress("veto_npeaks", nVetoPeaks);
+        chain->SetBranchAddress("veto_peak_time", vPeakTime);
+        chain->SetBranchAddress("veto_peak_height", vPeakHeight);
+        chain->SetBranchAddress("veto_peak_integral", vPeakIntegral);
+    }
+    else{
+        nVeto = 0;
     }
 
     entries = chain->GetEntries();
@@ -114,7 +134,7 @@ Double_t Yields::ep_ExpectedE(Double_t theta){
  * @return - the energy resolution.
  */
 Double_t Yields::EnergyRes(Double_t energy){
-    return energy*0.026/TMath::Sqrt(energy/1000.0);
+    return energy*0.033/TMath::Sqrt(energy/1000.0);
 }
 
 /**
@@ -143,7 +163,7 @@ void Yields::setup_Histos(Int_t en){
         h_ee_EvTheta[i] = new TH2F("h_ee_EvTheta_type"+typeArr[type]+ee_cutNames[i], "e-e E vs. #theta Type"+typeArr[type]+" Cut: "+ee_cut[i]+";#theta (#circ);E (MeV)", 60, 0, 6, en+400, 0, en+400);
         h_ee_Yield[i] = new TH1F("h_ee_Yield_type"+typeArr[type]+ee_cutNames[i], "e-e LiveCharge Normalized Yield vs. #theta Type"+typeArr[type]+" Cut: "+ee_cut[i]+ ";#theta (#circ);Counts", 60, 0, 6);
         h_ee_YieldPerLC[i] = new TH1F("h_ee_YieldPerLC_type"+typeArr[type]+ee_cutNames[i],"e-e Yield per LiveCharge Per File Type"+typeArr[type]+" Cut: "+ee_cut[i]+ ";File Number; Counts",numFiles+1, 0, numFiles+1);
-
+        
         if(gems && z){
             h_ee_zVert[i] = new TH1F("h_ee_zVert_type"+typeArr[type]+ee_cutNames[i],"e-e Reconstructed Z Vertex Type"+typeArr[type]+" Cut: "+ee_cut[i]+";z (mm);Counts",1000,-2000,7000);
         }
@@ -157,6 +177,7 @@ void Yields::setup_Histos(Int_t en){
         h_ep_EvTheta[j] = new TH2F("h_ep_EvTheta_type"+typeArr[type]+ep_cutNames[j], "e-p E vs. #theta Type"+typeArr[type]+" Cut: "+ep_cut[j]+ ";#theta (#circ);E (MeV)", 60, 0, 6, en+400, 0, en+400);  
         h_ep_Yield[j] = new TH1F("h_ep_Yield_type"+typeArr[type]+ep_cutNames[j], "e-p LiveCharge Normalized Yield vs. #theta Type"+typeArr[type]+" Cut: "+ep_cut[j]+ ";#theta (#circ);Counts", 60, 0, 6);
         h_ep_YieldPerLC[j] = new TH1F("h_ep_YieldPerLC_type"+typeArr[type]+ep_cutNames[j],"e-p Yield per LiveCharge Per File Type"+typeArr[type]+" Cut: "+ep_cut[j]+ ";File Number; Counts",numFiles+1, 0, numFiles+1);
+
 
         if(gems && z){
             h_ep_zVert[j] = new TH1F("h_ep_zVert_type"+typeArr[type]+ep_cutNames[j],"e-p Reconstructed Z Vertex Type"+typeArr[type]+" Cut: "+ep_cut[j]+";z (mm);Counts",1000,-2000,7000);
@@ -437,7 +458,7 @@ void Yields::find_Events_OnlyHyCal(){
                 if(all){fill_ee_Histos(0, theta, j, vert[j]);}
 
                 //Expected ee Energy Cut
-                if((TMath::Abs(cl_E[j] - expE[j]) <  3.0*EnergyRes(expE[j]))){
+                if((TMath::Abs(cl_E[j] - expE[j]) <  sigma_E*EnergyRes(expE[j]))){
                 
                     if(all){fill_ee_Histos(1, theta, j, vert[j]);}
                     ee_passedEHits.push_back(j);
@@ -456,7 +477,7 @@ void Yields::find_Events_OnlyHyCal(){
                             if(all){fill_ee_Histos(2, theta, j, vert[j]);}
 
                             //Cut for elasticity
-                            if(TMath::Abs(cl_E[ee_passedEHits.at(k)] + cl_E[j] - EBeam - M_e) < 3*EnergyRes(EBeam)){
+                            if(TMath::Abs(cl_E[ee_passedEHits.at(k)] + cl_E[j] - EBeam - M_e) < sigma_E*EnergyRes(EBeam)){
                         
                                 //If this was the first pair to pass the elasticity cut, make sure to put both hits in the histogram.
                                 if(ee_passedElastHits.size()==0){
@@ -491,7 +512,7 @@ void Yields::find_Events_OnlyHyCal(){
                 }
 
                 //Find e-p events
-                if(TMath::Abs(cl_E[j]-ep_expE[j]) < 3.0*EnergyRes(ep_expE[j])){
+                if(TMath::Abs(cl_E[j]-ep_expE[j]) < sigma_E*EnergyRes(ep_expE[j])){
                     if(all){fill_ep_Histos(0, theta, j, vert[j]);}
 
                     //Number of blocks cut
@@ -525,14 +546,28 @@ void Yields::find_Events_wGEMs(){
     for(Int_t j = 0; j < nClust; j++){
 
         //Geometric cut on the Absorber
-        if(TMath::Abs(cl_x[j]) > 20.77 * 2.25 || TMath::Abs(cl_y[j]) > 20.75*2.25){
+        if((TMath::Abs(cl_x[j]) > 20.77 * 2.25 || TMath::Abs(cl_y[j]) > 20.75*2.25) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
+
+            vector<Float_t> x_vec;
+            vector<Float_t> y_vec;
+            vector<Float_t> z_vec;
+            for(Int_t q = 0; q < MAX_GEMS; q++){
+                if(mgz[j][q]>0){
+                    x_vec.push_back(mgx[j][q]);
+                    y_vec.push_back(mgy[j][q]);
+                    z_vec.push_back(mgz[j][q]);
+                }
+            }
+
+            Utils::LineOfBestFit line = Utils::FitLine(x_vec, y_vec, z_vec);
+            Utils::Point p = Utils::ClosestApproachToZAxis(line);
             
             theta[j] = TMath::ATan2(TMath::Sqrt(cl_x[j]*cl_x[j]+cl_y[j]*cl_y[j]),cl_z[j]);
             
             //Geometric cut on high angles. 
             if(theta[j]*rad2Deg<6){
 
-                vert[j] = find_VertZ_beamline(j); //find the z vertex of this event assuming it came from the beamline.
+                vert[j] = p.z;//find_VertZ_beamline(j); //find the z vertex of this event assuming it came from the beamline.
 
                 phi[j] = TMath::ATan2(cl_y[j],cl_x[j]);//(matchGEMx[j][1],matchGEMy[j][1]);
                 if(phi[j]<0){
@@ -560,7 +595,7 @@ void Yields::find_Events_wGEMs(){
                 if(all){fill_ee_Histos(0, theta, j, vert[j]);}
 
                 //Expected ee Energy Cut and ensure that this hit has a match on both GEMs
-                if((TMath::Abs(cl_E[j] - expE[j]) <  3.0*EnergyRes(expE[j])) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
+                if((TMath::Abs(cl_E[j] - expE[j]) <  sigma_E*EnergyRes(expE[j]))){ //&& ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
                 
                     if(all){fill_ee_Histos(1, theta, j, vert[j]);}
                     ee_passedEHits.push_back(j);
@@ -601,7 +636,7 @@ void Yields::find_Events_wGEMs(){
                             }
 
                             //Cut for elasticity
-                            if(TMath::Abs(cl_E[ee_passedEHits.at(k)] + cl_E[j] - EBeam - M_e) < 3*EnergyRes(EBeam)){
+                            if(TMath::Abs(cl_E[ee_passedEHits.at(k)] + cl_E[j] - EBeam - M_e) < sigma_E*EnergyRes(EBeam)){
                         
                                 //If this was the first pair to pass the elasticity cut, make sure to put both hits in the histogram.
                                 if(ee_passedElastHits.size()==0){
@@ -673,7 +708,199 @@ void Yields::find_Events_wGEMs(){
                 }
 
                 //Find e-p events
-                if(TMath::Abs(cl_E[j]-ep_expE[j]) < 3.0*EnergyRes(ep_expE[j]) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
+                if(TMath::Abs(cl_E[j]-ep_expE[j]) < sigma_E*EnergyRes(ep_expE[j]) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
+                    if(all){fill_ep_Histos(0, theta, j, vert[j]);}
+
+                    //Number of blocks cut
+                    if(cl_nblocks[j]>=5){
+                        fill_ep_Histos(1, theta, j, vert[j]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Yields::find_Events_wGEMs_LOBF(){
+    Double_t theta[nClust];
+    Double_t phi[nClust];
+    //Double_t phi_GEM[nClust][2];
+    Double_t expE[nClust];
+    Double_t ep_expE[nClust];
+
+    Double_t vert[nClust];
+    Double_t vert_DoubleArmMoller[nClust];
+
+    vector<Int_t> ee_passedEHits;
+    vector<Int_t> ee_passedCopHits;
+    vector<Int_t> ee_passedElastHits;
+
+    for(Int_t j = 0; j < nClust; j++){
+
+        //Geometric cut on the Absorber and require match on each GEM plane.
+        if((TMath::Abs(cl_x[j]) > 20.77 * 2.25 || TMath::Abs(cl_y[j]) > 20.75*2.25) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
+
+            vector<Float_t> x_vec;
+            vector<Float_t> y_vec;
+            vector<Float_t> z_vec;
+            for(Int_t q = 0; q < MAX_GEMS; q++){
+                if(mgz[j][q]>0){
+                    x_vec.push_back(mgx[j][q]);
+                    y_vec.push_back(mgy[j][q]);
+                    z_vec.push_back(mgz[j][q]);
+                }
+            }
+
+            Utils::LineOfBestFit line = Utils::FitLine(x_vec, y_vec, z_vec);
+            Utils::Point p = Utils::ClosestApproachToZAxis(line);
+
+            theta[j] = TMath::ATan2(TMath::Sqrt(cl_x[j]*cl_x[j]+cl_y[j]*cl_y[j]),cl_z[j]);
+            
+            //Geometric cut on high angles. 
+            if(theta[j]*rad2Deg<6){
+
+                vert[j] = find_VertZ_beamline(j); //find the z vertex of this event assuming it came from the beamline.
+
+                phi[j] = TMath::ATan2(cl_y[j],cl_x[j]);//(matchGEMx[j][1],matchGEMy[j][1]);
+                if(phi[j]<0){
+                    phi[j] += 2*TMath::Pi();
+                }
+                phi[j] = phi[j] * rad2Deg;
+
+                /*phi_GEM[j][0] = TMath::ATan2(matchGEMy[j][0],matchGEMx[j][0]);
+                if(phi_GEM[j][0]<0){
+                    phi_GEM[j][0] += 2*TMath::Pi();
+                }
+                phi_GEM[j][0] = phi_GEM[j][0] * rad2Deg;
+
+                phi_GEM[j][1] = TMath::ATan2(matchGEMy[j][1],matchGEMx[j][1]);
+                if(phi_GEM[j][1]<0){
+                    phi_GEM[j][1] += 2*TMath::Pi();
+                }
+                phi_GEM[j][1] = phi_GEM[j][1] * rad2Deg;*/
+                 
+                expE[j] = ee_ExpectedE(theta[j]);
+                ep_expE[j] = ep_ExpectedE(theta[j]);
+
+                //Find e-e events
+                //No cut
+                if(all){fill_ee_Histos(0, theta, j, vert[j]);}
+
+                //Expected ee Energy Cut and ensure that this hit has a match on both GEMs
+                if((TMath::Abs(cl_E[j] - expE[j]) <  sigma_E*EnergyRes(expE[j])) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
+                
+                    if(all){fill_ee_Histos(1, theta, j, vert[j]);}
+                    ee_passedEHits.push_back(j);
+
+                    for(Int_t k = 0; k < (Int_t) ee_passedEHits.size() && k != j; k++){
+
+                        //Coplanarity Cut for double arm moller
+                        if((TMath::Abs(TMath::Abs(phi[ee_passedEHits.at(k)]-phi[j])-180) < 10)){ //Check that the double arm mollers are coplanar
+                    
+                            //If this was the first pair to pass the coplanarity cut, make sure to put both hits in the histogram.
+                            if(ee_passedCopHits.size()==0){
+                                ee_passedCopHits.push_back(ee_passedEHits.at(k));
+                                if(TMath::Abs(matchGEMz[j][1]-matchGEMz[ee_passedEHits.at(k)][1]) < 30){
+                                    vert_DoubleArmMoller[ee_passedEHits.at(k)] = find_DoubleArm_ee_VertZ(ee_passedEHits.at(k), j);
+                                }
+                                else{
+                                    vert_DoubleArmMoller[ee_passedEHits.at(k)] = 10000;
+                                }
+                                if(all){
+                                    fill_ee_Histos(2, theta, ee_passedEHits.at(k), vert[ee_passedEHits.at(k)]);
+                                    if(vert_DoubleArmMoller[ee_passedEHits.at(k)] < 10000){
+                                        h_ee_zVert_DoubleArmMoller[0]->Fill(vert_DoubleArmMoller[ee_passedEHits.at(k)]);
+                                    }
+                                }
+                            }
+                            ee_passedCopHits.push_back(j);
+                            if(TMath::Abs(matchGEMz[j][1]-matchGEMz[ee_passedEHits.at(k)][1])<30){
+                                vert_DoubleArmMoller[j] = find_DoubleArm_ee_VertZ(j, ee_passedEHits.at(k));
+                            }
+                            else{
+                                vert_DoubleArmMoller[j] = 100000;
+                            }
+                            if(all){
+                                fill_ee_Histos(2, theta, j, vert[j]);
+                                if(vert_DoubleArmMoller[j] < 10000){
+                                    h_ee_zVert_DoubleArmMoller[0]->Fill(vert_DoubleArmMoller[j]);
+                                }
+                            }
+
+                            //Cut for elasticity
+                            if(TMath::Abs(cl_E[ee_passedEHits.at(k)] + cl_E[j] - EBeam - M_e) < sigma_E*EnergyRes(EBeam)){
+                        
+                                //If this was the first pair to pass the elasticity cut, make sure to put both hits in the histogram.
+                                if(ee_passedElastHits.size()==0){
+                                    ee_passedElastHits.push_back(ee_passedEHits.at(k));
+                                    fill_ee_Histos(3, theta, ee_passedEHits.at(k), vert[ee_passedEHits.at(k)]);
+
+                                    if(vert_DoubleArmMoller[ee_passedEHits.at(k)]<10000){
+                                        h_ee_zVert_DoubleArmMoller[1]->Fill(vert_DoubleArmMoller[ee_passedEHits.at(k)]);
+                                    }
+                                }
+                        
+                                fill_ee_Histos(3, theta, j, vert[j]);
+                                if(vert_DoubleArmMoller[j]<10000){
+                                    h_ee_zVert_DoubleArmMoller[1]->Fill(vert_DoubleArmMoller[j]);
+                                }
+                                ee_passedElastHits.push_back(ee_passedEHits.at(k));
+
+                                Int_t p_ind = ee_passedEHits.at(k);
+
+                                if(prev_x[0] > -10000 && prev_x[1] > -10000 && prev_y[0] > -10000 && prev_y[1] > -10000 && prev_z > -10000 && prev_x1[0] > -10000 && prev_x1[1] > -10000 && prev_y1[0] > -10000 && prev_y1[1] > -10000 && prev_z1 > -10000){
+                                    
+                                    //Get center from the first GEM plane coordinates.
+                                    //Project to a common z-plane to find the center so there is no skewing.
+                                    Float_t GEM0_hit0proj[2] = {projToZPlane(matchGEMx[j][0],matchGEMz[j][0], prev_z), projToZPlane(matchGEMy[j][0],matchGEMz[j][0], prev_z)};
+                                    //cout<<GEM0_hit0proj[0] << " " << matchGEMx[j][0] << endl;
+                                    Float_t GEM0_hit1proj[2] = {projToZPlane(matchGEMx[p_ind][0],matchGEMz[p_ind][0], prev_z), projToZPlane(matchGEMy[p_ind][0],matchGEMz[p_ind][0], prev_z)};
+                                    
+                                    vector<Double_t> centerG0 = findCenter(prev_x, prev_y, GEM0_hit0proj[0], GEM0_hit0proj[1], GEM0_hit1proj[0], GEM0_hit1proj[1]);
+                                    h_eeCenters_GEM[0]->Fill(centerG0.at(0), centerG0.at(1));
+
+                                    prev_x[0] = -100000;
+                                    prev_y[0] = -100000;
+                                    prev_x[1] = -100000;
+                                    prev_y[1] = -100000;
+                                    prev_z    = -100000;
+
+                                    //Get center from the second GEM plane coordinates.
+                                    //Project to a common z-plane to find the center so there is no skewing.
+                                    Float_t GEM1_hit0proj[2] = {projToZPlane(matchGEMx[j][1],matchGEMz[j][1], prev_z1), projToZPlane(matchGEMy[j][1],matchGEMz[j][1], prev_z1)};
+                                    Float_t GEM1_hit1proj[2] = {projToZPlane(matchGEMx[p_ind][1],matchGEMz[p_ind][1], prev_z1), projToZPlane(matchGEMy[p_ind][1],matchGEMz[p_ind][1], prev_z1)};
+                                    
+                                    vector<Double_t> centerG1 = findCenter(prev_x1, prev_y1, GEM1_hit0proj[0], GEM1_hit0proj[1], GEM1_hit1proj[0], GEM1_hit1proj[1]);
+                                    h_eeCenters_GEM[1]->Fill(centerG1.at(0), centerG1.at(1));
+
+                                    prev_x1[0] = -100000;
+                                    prev_y1[0] = -100000;
+                                    prev_x1[1] = -100000;
+                                    prev_y1[1] = -100000;
+                                    prev_z1    = -100000;
+                                }
+                                else{
+                                    
+                                    prev_z    = matchGEMz[j][0];
+                                    prev_x[0] = projToZPlane(matchGEMx[p_ind][0], matchGEMz[p_ind][0], prev_z);
+                                    prev_x[1] = matchGEMx[j][0];
+                                    prev_y[0] = projToZPlane(matchGEMy[p_ind][0], matchGEMz[p_ind][0], prev_z);
+                                    prev_y[1] = matchGEMy[j][0];
+
+                                    prev_z1    = matchGEMz[j][1];
+                                    prev_x1[0] = projToZPlane(matchGEMx[p_ind][1], matchGEMz[p_ind][1], prev_z1);
+                                    prev_x1[1] = matchGEMx[j][1];
+                                    prev_y1[0] = projToZPlane(matchGEMx[p_ind][1], matchGEMz[p_ind][1], prev_z1);
+                                    prev_y1[1] = matchGEMy[j][1];
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //Find e-p events
+                if(TMath::Abs(cl_E[j]-ep_expE[j]) < sigma_E*EnergyRes(ep_expE[j]) && ((match_flag[j] & (1<<0)) || (match_flag[j] & (1<<1))) && ((match_flag[j] & (1<<2)) || (match_flag[j] & (1<<3)))){
                     if(all){fill_ep_Histos(0, theta, j, vert[j]);}
 
                     //Number of blocks cut
@@ -946,6 +1173,7 @@ void Yields::printPDF(TString pdfName,bool begin, bool end){
             h_ep_zVert[EP_CUT_NUM-1]->Draw("HIST");
         }
         c->Print(pdfName);
+        c->Clear();
 
         c->cd(1);
         //h_epToee_ratio->Draw("E");
@@ -1019,3 +1247,20 @@ Float_t Yields::find_DoubleArm_ee_VertZ(Int_t j, Int_t k){
 
     return TMath::Sqrt(((M_e+EBeam)*r_1*r_2)/(2*M_e));
 }
+
+/**
+ * Checks if this Low angle event qualifies as a Moller event from triggering the veto scintillator.
+ *
+ */
+ bool Yields::checkVeto(Int_t ind, Float_t Energy, Float_t exp_ee, Float_t exp_ep, Float_t th, Float_t x, Float_t y){
+    bool isMoller = false;
+    if(TMath::Abs(cl_E[ind] - exp_ee) < sigma_E*EnergyRes(exp_ee) && TMath::Abs(Energy - exp_ep) < sigma_E*EnergyRes(exp_ep)){
+        for(Int_t i = 0; i < nVeto; i++){
+            for(Int_t j = 0; j < nVetoPeaks[i]; j++){
+
+
+            }
+        }
+    }
+    return isMoller;
+ }

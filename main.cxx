@@ -97,9 +97,10 @@ static void printUsage(const char *prog)
               << "\t-v verbose: Option to plot and fill histograms before and after every cut.\n"
               << "\t-m <nThreads> Multithreading that will use the input amount of CPU cores \n"
               << "\t-G Does the Moller Center finding with the GEM positions.\n"
-              << "\t-H Uses the run yield history\n"
-              << "\t-E <Beam Energy> takes the beam energy for all files in this run in MeV\n"
-              << "\t-z includes vertex reconstruction using the GEMs\n"
+              << "\t-H Uses the run yield history.\n"
+              << "\t-E <Beam Energy> takes the beam energy for all files in this run in MeV.\n"
+              << "\t-z includes vertex reconstruction using the GEMs.\n"
+              << "\t-V use the veto scintillator.\n"
               << "\t-h Show this help\n"
               << "\tNOTE: Either option -f or -L are REQUIRED for running properly.";
 }
@@ -160,6 +161,7 @@ int main (int argc, char **argv){
     bool histOptUsed = false;
     bool z = false;
     bool zCut = false;
+    bool uV = false;
 
     string fileName_a;
     string fileName_b;
@@ -185,7 +187,7 @@ int main (int argc, char **argv){
 
     // ── Parse command-line ───────────────────────────────────────────────
     int opt;
-    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:GH::E:z::")) != -1) {
+    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:GH::E:z::V")) != -1) {
         switch (opt) {
             case 'a': a = true; fileName_a = optarg; break;
             case 'b': b = true; fileName_b = optarg; break;
@@ -200,6 +202,7 @@ int main (int argc, char **argv){
             case 'H': hist = true; if(optarg){historyLocation = optarg; histOptUsed = true;}; break;
             case 'E': E = optarg; break;
             case 'z': z = true; if(optarg){zC = optarg;}break;
+            case 'V': uV = true;
             case 'h':
             default: printUsage(argv[0]); return (opt == 'h') ? 0 : 1;
         }
@@ -296,7 +299,7 @@ int main (int argc, char **argv){
     TH1F* h_a_ep_Yield;
     if(a){
         fChain_a = makeChain(fileNameVec_a);
-        a_obj = new Yields(fChain_a, 0, lcMap, allPDF, gems, hist,beam,z);
+        a_obj = new Yields(fChain_a, 0, lcMap, allPDF, gems, hist, beam, z, uV);
         a_obj->Evaluate();
         if(!b && !c && !d){
             a_obj->printPDF(outfile, true, true);
@@ -318,7 +321,7 @@ int main (int argc, char **argv){
     TH1F* h_b_ep_Yield;
     if(b){
         fChain_b = makeChain(fileNameVec_b);
-        b_obj = new Yields(fChain_b, 1, lcMap, allPDF, gems, hist, beam,z);
+        b_obj = new Yields(fChain_b, 1, lcMap, allPDF, gems, hist, beam, z, uV);
         b_obj->Evaluate();
         if(!a){
             if(!c && !d){
@@ -331,7 +334,7 @@ int main (int argc, char **argv){
         }
         else{
             if(!c && !d){
-                b_obj->printPDF(outfile, false, true);
+                b_obj->printPDF(outfile, false, false);
             }
             else{
                 b_obj->printPDF(outfile, false, false);
@@ -351,7 +354,7 @@ int main (int argc, char **argv){
     TH1F* h_c_ep_Yield;
     if(c){
         fChain_c = makeChain(fileNameVec_c);
-        c_obj = new Yields(fChain_c, 2, lcMap, allPDF, gems, hist, beam,z);
+        c_obj = new Yields(fChain_c, 2, lcMap, allPDF, gems, hist, beam, z, uV);
         c_obj->Evaluate();
         if(!a && !b){
             if(!d){
@@ -363,7 +366,7 @@ int main (int argc, char **argv){
         }
         else{
             if(!d){
-                c_obj->printPDF(outfile, false, true);
+                c_obj->printPDF(outfile, false, false);
             }
             else{
                 c_obj->printPDF(outfile, false, false);
@@ -383,7 +386,7 @@ int main (int argc, char **argv){
     TH1F* h_d_ep_Yield;
     if(d){
         fChain_d = makeChain(fileNameVec_d);
-        d_obj = new Yields(fChain_d, 3, lcMap, allPDF, gems, hist, beam,z);
+        d_obj = new Yields(fChain_d, 3, lcMap, allPDF, gems, hist, beam, z, uV);
         d_obj->Evaluate();
         if(!a && !b && !c){
             d_obj->printPDF(outfile, true, true);
@@ -411,13 +414,13 @@ int main (int argc, char **argv){
     TH1F* h_resGas_ee = new TH1F("h_resGas_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
     TH1F* h_collimators_ee = new TH1F("h_collimators_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
     TH1F* h_cell_ee = new TH1F("h_cell_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_H2Gas_ee = new TH1F("h_H2Gas_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
+    TH1F* h_H2Gas_ee = new TH1F("h_H2Gas_ee", "e-e H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
 
     //Declare the background contamination histograms for the e-p events
     TH1F* h_resGas_ep = new TH1F("h_resGas_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
     TH1F* h_collimators_ep = new TH1F("h_collimators_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
     TH1F* h_cell_ep = new TH1F("h_cell_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_H2Gas_ep = new TH1F("h_H2Gas_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
+    TH1F* h_H2Gas_ep = new TH1F("h_H2Gas_ep", "e-p H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
 
     if(a && b && c && d){
         gErrorIgnoreLevel = 3000;
@@ -516,6 +519,230 @@ int main (int argc, char **argv){
         (*arr).Write();
 	    file1.Close();
     }
+
+    TH1F* bOverab_Ratio_ee;
+    TH1F* bOverab_Ratio_ep;
+    if(a && b && !c && !d){
+
+        bOverab_Ratio_ee = (TH1F*) h_b_ee_Yield->Clone();
+        bOverab_Ratio_ee->SetName("h_aOverab_Ratio_ee");
+        bOverab_Ratio_ee->SetTitle("e-e Background Contamination of Type B Over Type A - Type B;#theta (#circ);N_B/(N_A-N_B)");
+        bOverab_Ratio_ee->SetMarkerColor(kBlue);
+        bOverab_Ratio_ee->SetMarkerStyle(20);
+        bOverab_Ratio_ee->SetLineColor(kBlue);
+
+        h_H2Gas_ee->Add(h_a_ee_Yield, h_b_ee_Yield, 1, -1);
+        bOverab_Ratio_ee->Divide(h_H2Gas_ee);
+        
+
+        bOverab_Ratio_ep = (TH1F*) h_b_ep_Yield->Clone();
+        bOverab_Ratio_ep->SetName("h_aOverab_Ratio_ep");
+        bOverab_Ratio_ep->SetTitle("e-p Background Contamination of Type B Over Type A - Type B;#theta (#circ);N_B/(N_A-N-B)");
+        bOverab_Ratio_ep->SetMarkerColor(kBlue);
+        bOverab_Ratio_ep->SetMarkerStyle(20);
+        bOverab_Ratio_ep->SetLineColor(kBlue);
+
+        h_H2Gas_ep->Add(h_a_ep_Yield, h_b_ep_Yield, 1, -1);
+        bOverab_Ratio_ep->Divide(h_H2Gas_ep);
+        
+
+        c1->cd(1);
+        bOverab_Ratio_ee->SetStats(0);
+        bOverab_Ratio_ee->SetAxisRange(0,0.3, "Y");
+        bOverab_Ratio_ee->Draw("P E");
+        c1->Print(outfile);
+        c1->Clear();
+
+        c1->cd(1);
+        bOverab_Ratio_ep->SetStats(0);
+        bOverab_Ratio_ep->Draw("P E");
+        c1->Print(outfile + ")");
+
+        TObjArray* arr1 = new TObjArray(0,0);
+        (*arr1).Add(bOverab_Ratio_ee);
+        (*arr1).Add(h_H2Gas_ee);
+        (*arr1).Add(bOverab_Ratio_ep);
+        (*arr1).Add(h_H2Gas_ep);
+
+        TFile file2(root_outfile,"UPDATE");
+        (*arr1).Write();
+	    file2.Close();
+    }
+
+    TH1F* h_theRest_ee;
+    TH1F* h_theRest_ep;
+    TH1F* check_C_ee;
+    TH1F* check_C_ep;
+    TH1F* h_percentH2_ee;
+    TH1F* h_percentH2_ep;
+    if(a && b && c && !d){
+
+        h_H2Gas_ee->Add(h_a_ee_Yield, h_b_ee_Yield, 1, -1);
+        h_H2Gas_ep->Add(h_a_ep_Yield, h_b_ep_Yield, 1, -1);
+
+        h_percentH2_ee = (TH1F*) h_H2Gas_ee->Clone();
+        h_percentH2_ee->SetName("h_percentH2_ee");
+        h_percentH2_ee->Divide(h_a_ee_Yield);
+
+        h_percentH2_ep = (TH1F*) h_H2Gas_ep->Clone();
+        h_percentH2_ep->SetName("h_percentH2_ep");
+        h_percentH2_ep->Divide(h_a_ep_Yield);
+
+
+        h_resGas_ee->Add(h_b_ee_Yield, h_c_ee_Yield, 1, -1);
+        h_resGas_ee->Divide(h_H2Gas_ee);
+        h_resGas_ee->SetMarkerStyle(20);
+        h_resGas_ee->SetMarkerColor(kBlack);
+        h_resGas_ee->SetLineColor(kBlack);
+
+        h_theRest_ee = (TH1F*) h_c_ee_Yield->Clone();
+        h_theRest_ee->SetName("h_theRest_ee");
+        h_theRest_ee->SetTitle("e-e Type C/H2 Signal;#theta (#circ);N_Cont/N_H2");
+        h_theRest_ee->Divide(h_H2Gas_ee);
+        h_theRest_ee->SetMarkerStyle(21);
+        h_theRest_ee->SetMarkerColor(kRed);
+        h_theRest_ee->SetLineColor(kRed);
+
+        h_resGas_ep->Add(h_b_ep_Yield, h_c_ep_Yield, 1, -1);
+        h_resGas_ep->Divide(h_H2Gas_ep);
+        h_resGas_ep->SetMarkerStyle(20);
+        h_resGas_ep->SetMarkerColor(kBlack);
+        h_resGas_ep->SetLineColor(kBlack);
+
+        h_theRest_ep = (TH1F*) h_c_ep_Yield->Clone();
+        h_theRest_ep->SetName("h_theRest_ep");
+        h_theRest_ep->SetTitle("e-p Type C/H2 Signal;#theta (#circ);N_Cont/N_H2");
+        h_theRest_ep->Divide(h_H2Gas_ep);
+        h_theRest_ep->SetMarkerStyle(21);
+        h_theRest_ep->SetMarkerColor(kRed);
+        h_theRest_ep->SetLineColor(kRed);
+
+        c1->cd(1);
+        h_resGas_ee->SetAxisRange(0,0.6, "Y");
+        h_resGas_ee->Draw("P E");
+        h_theRest_ee->Draw("SAME P E");
+        legend->SetHeader("Legend","C"); // option "C" allows to center the header
+	    legend->AddEntry(h_resGas_ee,"(b)-(c) Res. Gas","p");
+	    legend->AddEntry(h_theRest_ee,"(c) Cell & Coll.","p");
+        legend->Draw();
+        c1->Print(outfile);
+        c1->Clear();
+        legend->Clear();
+
+        c1->cd(1);
+        h_resGas_ep->SetAxisRange(0,4, "Y");
+        h_resGas_ep->Draw("P E");
+        h_theRest_ep->Draw("SAME P E");
+        legend->SetHeader("Legend","C"); // option "C" allows to center the header
+	    legend->AddEntry(h_resGas_ep,"(b)-(c) Res. Gas","p");
+	    legend->AddEntry(h_theRest_ep,"(c) Cell & Coll.","p");
+        legend->Draw();
+        c1->Print(outfile);
+        c1->Clear();
+        legend->Clear();
+
+        check_C_ee = (TH1F*) h_c_ee_Yield->Clone();
+        check_C_ee->SetName("check_C_ee");
+        check_C_ee->SetTitle("e-e Type C/Type A;#theta (#circ);N_C/N_A");
+        check_C_ee->Divide(h_a_ee_Yield);
+        
+        c1->cd(1);
+        check_C_ee->Draw("P E");
+        c1->Print(outfile);
+        c1->Clear();
+
+        check_C_ep = (TH1F*) h_c_ep_Yield->Clone();
+        check_C_ep->SetName("check_C_ee");
+        check_C_ep->SetTitle("e-p Type C/Type A;#theta (#circ);N_C/N_A");
+        check_C_ep->Divide(h_a_ep_Yield);
+        c1->cd(1);
+        check_C_ep->Draw("P E");
+        c1->Print(outfile + ")");
+        c1->Clear();
+
+        TObjArray* arr2 = new TObjArray(0,0);
+        (*arr2).Add(h_resGas_ee);
+        (*arr2).Add(h_theRest_ee);
+        (*arr2).Add(h_H2Gas_ee);
+        (*arr2).Add(h_resGas_ep);
+        (*arr2).Add(h_theRest_ep);
+        (*arr2).Add(h_H2Gas_ep);
+        (*arr2).Add(h_percentH2_ee);
+        (*arr2).Add(h_percentH2_ep);
+
+        TFile file3(root_outfile,"UPDATE");
+        (*arr2).Write();
+	    file3.Close();
+    }
+
+    TH1F* h_AC_Ratio_ee;
+    TH1F* h_AC_Ratio_ep;
+    if(a && !b && c && !d){
+
+        h_AC_Ratio_ee = (TH1F*) h_c_ee_Yield->Clone();
+        h_AC_Ratio_ee->SetName("h_AC_Ratio_ee");
+        h_AC_Ratio_ee->SetTitle("e-e Type C/Type A Yield Ratio");
+        h_AC_Ratio_ee->Divide(h_a_ee_Yield);
+        
+        c1->cd(1);
+        h_AC_Ratio_ee->SetStats(0);
+        h_AC_Ratio_ee->Draw("P E");
+        c1->Print(outfile);
+        c1->Clear();
+
+        h_AC_Ratio_ep = (TH1F*) h_c_ep_Yield->Clone();
+        h_AC_Ratio_ep->SetName("h_AC_Ratio_ep");
+        h_AC_Ratio_ep->SetTitle("e-p Type C/Type A Yield Ratio");
+        h_AC_Ratio_ep->Divide(h_a_ep_Yield);
+
+        c1->cd(1);
+        h_AC_Ratio_ep->SetStats(0);
+        h_AC_Ratio_ep->Draw("P E");
+        c1->Print(outfile + ")");
+        c1->Clear();
+
+        TObjArray* arr3 = new TObjArray(0,0);
+        (*arr3).Add(h_AC_Ratio_ee);
+        (*arr3).Add(h_AC_Ratio_ep);
+
+        TFile file4(root_outfile,"UPDATE");
+        (*arr3).Write();
+	    file4.Close();
+    }
+
+    if(a && b && c && !d){
+        delete h_theRest_ee;
+        delete h_theRest_ep;
+        delete h_resGas_ee;
+        delete h_resGas_ep;
+        delete h_H2Gas_ee;
+        delete h_H2Gas_ep;
+        delete h_percentH2_ee;
+        delete h_percentH2_ep;
+    }
+    
+    if(a && b && !c && !d){
+        delete bOverab_Ratio_ee;
+        delete bOverab_Ratio_ep;
+        delete h_H2Gas_ee;
+        delete h_H2Gas_ep;
+    }
+    if(a&& b && c && d){
+        delete h_cell_ee;
+        delete h_cell_ep;
+        delete h_collimators_ee;
+        delete h_collimators_ep;
+        delete h_resGas_ee;
+        delete h_resGas_ep;
+        delete h_H2Gas_ee;
+        delete h_H2Gas_ep;
+    }
+
+    if(a && !b && c && !d){
+        delete h_AC_Ratio_ee;
+        delete h_AC_Ratio_ep;
+    }
+    
 
 
     return 0;

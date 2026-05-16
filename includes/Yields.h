@@ -42,11 +42,14 @@
 
 #include <iomanip>
 
+#include "Utils.h"
+
 using namespace std;
 
 class Yields{
 
     public:
+
         TChain* chain;
 
         static constexpr Double_t rad2Deg = 180/TMath::Pi(); //Conversion from radians to degrees
@@ -55,11 +58,18 @@ class Yields{
         static constexpr Int_t EE_CUT_NUM = 4; //Number of cuts to apply for e-e
         static constexpr Int_t EP_CUT_NUM = 2; //Number of cuts to apply for e-p
 
+        static constexpr Int_t MAX_VETO = 4;
+        static constexpr Int_t MAX_PEAKS    = 8;
+
+        static constexpr Int_t MAX_GEMS = 4;
+
         static constexpr Double_t M_p = 938.272; //Mass of Proton MeV/c^2
         static constexpr Double_t M_e = 0.511; //Mass of Electron MeV/c^2
 
+        static constexpr Double_t sigma_E = 3.0; // the sigma level of the energy cuts.
+
         //Constructor that ensures the chain tree is set up.
-        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB, bool v);
+        Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB, bool v, bool uV);
 
         void Evaluate();
 
@@ -79,6 +89,7 @@ class Yields{
         bool gems;
         bool hist;
         bool z;
+        bool useVeto;
 
         map<Int_t, Double_t> lcMap;
         Double_t lc;
@@ -102,8 +113,9 @@ class Yields{
 
         //Event information from root tree.
         Int_t evNum;
-        Int_t totalE;
+        Float_t totalE;
         Float_t EBeam;
+
         Int_t nClust;
         Float_t cl_x[MAX_CLUSTERS];
         Float_t cl_y[MAX_CLUSTERS];
@@ -118,6 +130,18 @@ class Yields{
         Float_t matchGEMx[MAX_CLUSTERS][2];
         Float_t matchGEMy[MAX_CLUSTERS][2];
         Float_t matchGEMz[MAX_CLUSTERS][2];
+
+        Int_t nVeto;
+        UShort_t vetoId[MAX_VETO];
+        Int_t nVetoPeaks[MAX_VETO];
+        Float_t vPeakTime[MAX_VETO][MAX_PEAKS];
+        Float_t vPeakHeight[MAX_VETO][MAX_PEAKS];
+        Float_t vPeakIntegral[MAX_VETO][MAX_PEAKS];
+
+        Float_t mgx[MAX_CLUSTERS][MAX_GEMS];
+        Float_t mgy[MAX_CLUSTERS][MAX_GEMS];
+        Float_t mgz[MAX_CLUSTERS][MAX_GEMS];
+
 
         //Declare arrays of histograms that will be made before and after each cut.
         TH2F* h_ee_HC_XY[EE_CUT_NUM];
@@ -153,11 +177,14 @@ class Yields{
 
         void find_Events_OnlyHyCal();
         void find_Events_wGEMs();
+        void find_Events_wGEMs_LOBF();
 
         Float_t find_VertZ_beamline(Int_t j);
         Float_t find_DoubleArm_ee_VertZ(Int_t j, Int_t k);
 
         Float_t projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ);
+
+        bool checkVeto(Int_t ind, Float_t Energy, Float_t exp_ee, Float_t exp_ep, Float_t th, Float_t x, Float_t y);
 };
 
 #endif
