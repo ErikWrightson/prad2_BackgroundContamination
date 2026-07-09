@@ -1,0 +1,2 @@
+/volatile/hallb/prad/wrightso/BackgroundStudies/2p2GeV/TypeA/prad_25211.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/2p2GeV/TypeA/prad_25213.root

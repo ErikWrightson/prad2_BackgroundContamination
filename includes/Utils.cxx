@@ -61,3 +61,18 @@ Utils::Point Utils::ClosestApproachToZAxis(Utils::LineOfBestFit line){
 
     return p;
 }
+
+/**
+ * Finds the Q^2 of the incident electron.
+ *
+ * @param Ep - the energy of the scattered electron in MeV.
+ * @param E_0 - the initial energy of the incident electron in MeV.
+ * @param theta - the scattering angle of the electron.
+ *
+ * @return - the Q^2 for these conditions.
+ */
+Double_t Utils::Q_2(Float_t Ep, Float_t E_0, Double_t theta){
+    Double_t s = TMath::Sin(theta/2.0);
+
+    return 4*(Ep/1000.0)*(E_0/1000.0)*s*s;
+}

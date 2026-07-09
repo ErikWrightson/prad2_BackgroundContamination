@@ -1,5 +1,5 @@
 /**
- * Header file for Yields object which evaluates reconstructed HyCal Events for e-e and e-p yields for background subtraction.
+ * Header file for Utils class which provides useful utilities functions to this project.
  * @author Erik Wrightson <wrightso@jlab.org>
  * @version 04.21.2026
  * @creation 04.16.2026
@@ -69,6 +69,7 @@ class Utils{
 
         static LineOfBestFit FitLine(vector<Float_t> x, vector<Float_t> y, vector<Float_t> z);
         static Point ClosestApproachToZAxis(Utils::LineOfBestFit line);
+        static Double_t Q_2(Float_t Ep, Float_t E_0, Double_t theta);
 };
 
 #endif

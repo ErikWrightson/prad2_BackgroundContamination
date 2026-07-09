@@ -1,0 +1,12 @@
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24626.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24631.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24633.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24635.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24640.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24641.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24642.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24645.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24648.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24653.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24655.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeA/prad_24662.root

@@ -160,7 +160,6 @@ int main (int argc, char **argv){
     bool hist = false;
     bool histOptUsed = false;
     bool z = false;
-    bool zCut = false;
     bool uV = false;
 
     string fileName_a;
@@ -169,8 +168,7 @@ int main (int argc, char **argv){
     string fileName_d;
 
     string cpus = "1";
-    string E = "3488.43";
-    TString zC = "";
+    string E = "3485.41";//"3488.43";
 
     TString outfile = "./outfiles/defaultOutput.pdf";
     TString root_outfile = "./rootFiles/defaultRootOutput.root";
@@ -187,7 +185,7 @@ int main (int argc, char **argv){
 
     // ── Parse command-line ───────────────────────────────────────────────
     int opt;
-    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:GH::E:z::V")) != -1) {
+    while ((opt = getopt(argc, argv, "a:b:c:d:Lf:D:vm:GH::E:zV")) != -1) {
         switch (opt) {
             case 'a': a = true; fileName_a = optarg; break;
             case 'b': b = true; fileName_b = optarg; break;
@@ -201,16 +199,11 @@ int main (int argc, char **argv){
             case 'G': gems = true; break;
             case 'H': hist = true; if(optarg){historyLocation = optarg; histOptUsed = true;}; break;
             case 'E': E = optarg; break;
-            case 'z': z = true; if(optarg){zC = optarg;}break;
+            case 'z': z = true; break;
             case 'V': uV = true;
             case 'h':
             default: printUsage(argv[0]); return (opt == 'h') ? 0 : 1;
         }
-    }
-
-    if(zC == "y"){
-        zCut = true;
-        cout<< "Currently there is no implemented cut on reconstructed z vertex. Sorry. Continuing without it anyway." << endl;
     }
 
     if (hist && !fs::is_directory(historyLocation.Data())){
@@ -410,17 +403,20 @@ int main (int argc, char **argv){
     TCanvas *c1 = new TCanvas("c1", "BackgroundSubtraction_Canvas",1000,1000);
     auto legend = new TLegend(0.1,0.8,0.4,0.9);
 
+    Int_t nBins = Yields::nBinEdges;
+    Double_t bEdges[nBins] = {Yields::tBinEdges[Yields::nBinEdges]};
+
     //Declare the Background contamination histograms for the e-e events
-    TH1F* h_resGas_ee = new TH1F("h_resGas_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_collimators_ee = new TH1F("h_collimators_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_cell_ee = new TH1F("h_cell_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_H2Gas_ee = new TH1F("h_H2Gas_ee", "e-e H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
+    TH1F* h_resGas_ee = new TH1F("h_resGas_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2",60, 0, 6);//nBins-1, bEdges);
+    TH1F* h_collimators_ee = new TH1F("h_collimators_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2",60, 0, 6);//nBins-1, bEdges);
+    TH1F* h_cell_ee = new TH1F("h_cell_ee", "e-e Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);//nBins-1, bEdges);
+    TH1F* h_H2Gas_ee = new TH1F("h_H2Gas_ee", "e-e H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);//nBins-1, bEdges);
 
     //Declare the background contamination histograms for the e-p events
-    TH1F* h_resGas_ep = new TH1F("h_resGas_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_collimators_ep = new TH1F("h_collimators_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_cell_ep = new TH1F("h_cell_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
-    TH1F* h_H2Gas_ep = new TH1F("h_H2Gas_ep", "e-p H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);
+    TH1F* h_resGas_ep = new TH1F("h_resGas_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);//nBins-1, bEdges);
+    TH1F* h_collimators_ep = new TH1F("h_collimators_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);//nBins-1, bEdges);
+    TH1F* h_cell_ep = new TH1F("h_cell_ep", "e-p Background Contamination of H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);//nBins-1, bEdges);
+    TH1F* h_H2Gas_ep = new TH1F("h_H2Gas_ep", "e-p H2 Signal;#theta (#circ);N_Cont/N_H2", 60, 0, 6);//nBins-1, bEdges);
 
     if(a && b && c && d){
         gErrorIgnoreLevel = 3000;
@@ -522,6 +518,10 @@ int main (int argc, char **argv){
 
     TH1F* bOverab_Ratio_ee;
     TH1F* bOverab_Ratio_ep;
+    TH1F* h_percentH2_ee;
+    TH1F* h_percentH2_ep;
+    TH1F* total_count_ee;
+    TH1F* total_count_ep;
     if(a && b && !c && !d){
 
         bOverab_Ratio_ee = (TH1F*) h_b_ee_Yield->Clone();
@@ -533,7 +533,10 @@ int main (int argc, char **argv){
 
         h_H2Gas_ee->Add(h_a_ee_Yield, h_b_ee_Yield, 1, -1);
         bOverab_Ratio_ee->Divide(h_H2Gas_ee);
-        
+
+        h_percentH2_ee = (TH1F*) h_H2Gas_ee->Clone();
+        h_percentH2_ee->SetName("h_percentH2_ee");
+        h_percentH2_ee->Divide(h_a_ee_Yield);
 
         bOverab_Ratio_ep = (TH1F*) h_b_ep_Yield->Clone();
         bOverab_Ratio_ep->SetName("h_aOverab_Ratio_ep");
@@ -544,25 +547,85 @@ int main (int argc, char **argv){
 
         h_H2Gas_ep->Add(h_a_ep_Yield, h_b_ep_Yield, 1, -1);
         bOverab_Ratio_ep->Divide(h_H2Gas_ep);
+
+        h_percentH2_ep = (TH1F*) h_H2Gas_ep->Clone();
+        h_percentH2_ep->SetName("h_percentH2_ep");
+        h_percentH2_ep->Divide(h_a_ep_Yield);
+
+        total_count_ee = (TH1F*) h_a_ee_Yield->Clone();
+        total_count_ee->SetName("total_count_ee");
+        total_count_ee->Scale(800000.0);
+        total_count_ee->Multiply(h_percentH2_ee);
+        //total_count_ee->Scale(0.95);
+        total_count_ee->Scale(1.0/1000); 
+        total_count_ee->Scale(4.75);
+
+        total_count_ep = (TH1F*)  h_a_ep_Yield->Clone();
+        total_count_ep->SetName("total_count_ep");
+        total_count_ep->Scale(800000.0);
+        total_count_ep->Multiply(h_percentH2_ep);
+        //total_count_ep->Scale(0.95);
+        total_count_ep->Scale(1.0/1000);
+        total_count_ep->Scale(4.75);
+
+        Float_t countSum_ee = 0;
+        Float_t countSum_ee_37 = 0;
+        Float_t countSum_ep = 0;
+        Float_t countSum_ep_37 = 0;
+        for(Int_t i = 0; i < 8; i++){
+            countSum_ee += total_count_ee->GetBinContent(40+i);//nBins-1); //+ i);
+            countSum_ee_37 += total_count_ee->GetBinContent(38+i);//nBins-1); //+ i);
+            countSum_ep += total_count_ep->GetBinContent(40+i);//nBins-1); //+ i);
+            countSum_ep_37 += total_count_ep->GetBinContent(38+i);//nBins-1); //+ i);
+        }
+        //cout<< total_count_ee->GetXaxis()->GetBinCenter(nBins-1) << " "<<countSum_ee << endl;
+        //cout<< total_count_ep->GetXaxis()->GetBinCenter(nBins-1) << " "<<countSum_ep << endl;
+        cout<< total_count_ee->GetXaxis()->GetBinCenter(40) << " "<<countSum_ee << " >3.7 = " << countSum_ee_37 << endl;
+        cout<< total_count_ep->GetXaxis()->GetBinCenter(40) << " "<<countSum_ep << " >3.7 = " << countSum_ep_37 << endl;
         
 
         c1->cd(1);
         bOverab_Ratio_ee->SetStats(0);
-        bOverab_Ratio_ee->SetAxisRange(0,0.3, "Y");
+        bOverab_Ratio_ee->SetAxisRange(0,0.10, "Y");
         bOverab_Ratio_ee->Draw("P E");
         c1->Print(outfile);
         c1->Clear();
 
         c1->cd(1);
+        gPad->SetLogy(1);
+        total_count_ee->SetStats(0);
+        total_count_ee->SetMarkerStyle(20);
+        total_count_ee->SetTitle("e-e Estimated Signal Count from Events on 06/15/2026 at flow 1300cc/min");
+        total_count_ee->Draw("P E");
+        c1->Print(outfile);
+        c1->Clear();
+        gPad->SetLogy(0);
+
+        c1->cd(1);
         bOverab_Ratio_ep->SetStats(0);
+        bOverab_Ratio_ep->SetAxisRange(0,0.10, "Y");
         bOverab_Ratio_ep->Draw("P E");
+        c1->Print(outfile);
+        c1->Clear();
+
+        c1->cd(1);
+        gPad->SetLogy(1);
+        total_count_ep->SetStats(0);
+        total_count_ep->SetMarkerStyle(20);
+        total_count_ep->SetTitle("e-p Estimated Signal Count from Events on 06/15/2026 at flow 1300cc/min");
+        total_count_ep->Draw("P E");
         c1->Print(outfile + ")");
+        gPad->SetLogy(0);
 
         TObjArray* arr1 = new TObjArray(0,0);
         (*arr1).Add(bOverab_Ratio_ee);
         (*arr1).Add(h_H2Gas_ee);
         (*arr1).Add(bOverab_Ratio_ep);
         (*arr1).Add(h_H2Gas_ep);
+        (*arr1).Add(h_percentH2_ee);
+        (*arr1).Add(h_percentH2_ep);
+        (*arr1).Add(total_count_ee);
+        (*arr1).Add(total_count_ep);
 
         TFile file2(root_outfile,"UPDATE");
         (*arr1).Write();
@@ -573,8 +636,6 @@ int main (int argc, char **argv){
     TH1F* h_theRest_ep;
     TH1F* check_C_ee;
     TH1F* check_C_ep;
-    TH1F* h_percentH2_ee;
-    TH1F* h_percentH2_ep;
     if(a && b && c && !d){
 
         h_H2Gas_ee->Add(h_a_ee_Yield, h_b_ee_Yield, 1, -1);

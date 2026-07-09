@@ -1,0 +1,2 @@
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeB/prad_24579.root
+/volatile/hallb/prad/wrightso/BackgroundStudies/700MeV/TypeB/prad_24585.root

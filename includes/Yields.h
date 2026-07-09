@@ -55,7 +55,7 @@ class Yields{
         static constexpr Double_t rad2Deg = 180/TMath::Pi(); //Conversion from radians to degrees
 
         static constexpr Int_t  MAX_CLUSTERS = 400; //Maximum number of clusters.
-        static constexpr Int_t EE_CUT_NUM = 4; //Number of cuts to apply for e-e
+        static constexpr Int_t EE_CUT_NUM = 5; //Number of cuts to apply for e-e
         static constexpr Int_t EP_CUT_NUM = 2; //Number of cuts to apply for e-p
 
         static constexpr Int_t MAX_VETO = 4;
@@ -67,6 +67,15 @@ class Yields{
         static constexpr Double_t M_e = 0.511; //Mass of Electron MeV/c^2
 
         static constexpr Double_t sigma_E = 3.0; // the sigma level of the energy cuts.
+
+        static constexpr Int_t nBinEdges = 40;
+        static constexpr Double_t tBinEdges[nBinEdges] = {0.595, 0.610, 0.625, 0.640, 0.655, 0.670,
+                                        0.685, 0.7, 0.715, 0.731, 0.748, 0.766,
+                                        0.785, 0.806, 0.828, 0.852, 0.879, 0.908,
+                                        0.94, 0.975, 1.014, 1.057, 1.105, 1.157,
+                                        1.211, 1.27, 1.338, 1.417, 1.514, 1.634,
+                                        1.787, 2.0, 2.213, 2.492, 2.792, 3.092,
+                                        3.392, 3.692, 3.992, 4.292};
 
         //Constructor that ensures the chain tree is set up.
         Yields(TChain* c, Int_t type, map<Int_t, Double_t>& m, bool a, bool g, bool h, Float_t EB, bool v, bool uV);
@@ -95,8 +104,8 @@ class Yields{
         Double_t lc;
         vector<TString> runlist;
 
-        TString ee_cutNames[EE_CUT_NUM] = {"_noCut", "_expectedE","_coplanarity" ,"_elast"};
-        TString ee_cut[EE_CUT_NUM] = {"None","Energy", "Coplanarity", "Elasticity"};
+        TString ee_cutNames[EE_CUT_NUM] = {"_noCut", "_expectedE","_coplanarity" ,"_elast", "_vertZ"};
+        TString ee_cut[EE_CUT_NUM] = {"None","Energy", "Coplanarity", "Elasticity", "Vertex"};
         
         TString ep_cutNames[EP_CUT_NUM] = {"_expectedE", "_numBlocks"};
         TString ep_cut[EP_CUT_NUM] = {"Energy", "Number of Blocks"};
@@ -142,20 +151,35 @@ class Yields{
         Float_t mgy[MAX_CLUSTERS][MAX_GEMS];
         Float_t mgz[MAX_CLUSTERS][MAX_GEMS];
 
+        Utils::Point p[MAX_CLUSTERS];
+
+        Float_t q2[MAX_CLUSTERS];
+
 
         //Declare arrays of histograms that will be made before and after each cut.
         TH2F* h_ee_HC_XY[EE_CUT_NUM];
         TH2F* h_ee_EvTheta[EE_CUT_NUM];
         TH1F* h_ee_Yield[EE_CUT_NUM];
+        TH1F* h_ee_Yield_Q2[EE_CUT_NUM];
         TH1F* h_ee_YieldPerLC[EE_CUT_NUM];
+        TH1F* h_ee_GeoAccNormYield[EE_CUT_NUM];
+
+        TH2F* h_ee_Over6500_VertZ_XY[EE_CUT_NUM];
+        TH2F* h_ee_Over6500_VertZ_HyCal_XY[EE_CUT_NUM];
+        TH1F* h_ee_Over6500_VertZ_Energy[EE_CUT_NUM];
+        TH2F* h_ee_Over6500_VertZ_EnergyVAngle[EE_CUT_NUM];
 
         TH2F* h_ep_HC_XY[EP_CUT_NUM];
         TH2F* h_ep_EvTheta[EP_CUT_NUM];
         TH1F* h_ep_Yield[EP_CUT_NUM];
-        TH1F* h_ep_YieldPerLC[EE_CUT_NUM];
+        TH1F* h_ep_Yield_Q2[EP_CUT_NUM];
+        TH1F* h_ep_YieldPerLC[EP_CUT_NUM];
+        TH1F* h_ep_GeoAccNormYield[EP_CUT_NUM];
+
+        TH1F* h_GeoAcc;
 
         TH1F* h_ee_zVert[EE_CUT_NUM];
-        TH1F* h_ee_zVert_DoubleArmMoller[2];
+        TH1F* h_ee_zVert_DoubleArmMoller[3];
         TH1F* h_ep_zVert[EE_CUT_NUM];
 
         TH2F* h_eeCenters;
@@ -177,7 +201,7 @@ class Yields{
 
         void find_Events_OnlyHyCal();
         void find_Events_wGEMs();
-        void find_Events_wGEMs_LOBF();
+        //void find_Events_wGEMs_LOBF();
 
         Float_t find_VertZ_beamline(Int_t j);
         Float_t find_DoubleArm_ee_VertZ(Int_t j, Int_t k);
@@ -185,6 +209,8 @@ class Yields{
         Float_t projToZPlane(Float_t nonZ, Float_t ogZ, Float_t newZ);
 
         bool checkVeto(Int_t ind, Float_t Energy, Float_t exp_ee, Float_t exp_ep, Float_t th, Float_t x, Float_t y);
+
+        void makeGeoAccHisto();
 };
 
 #endif
